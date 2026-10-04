@@ -529,7 +529,7 @@ const ECODE={not_granted:'Нет разрешения на запросы к Cla
  sampling_disabled:'Запросы к Claude отключены для этого аккаунта.',not_declared:'Страница опубликована без доступа к Claude.',refused:'Claude отказался отвечать.',
  empty_completion:'Пустой ответ.',get no_sample(){return OFF?'Автономный режим: задания от Claude недоступны. Банк готовых заданий подключается позже.':'Запросы к Claude работают только при открытии страницы в Claude (приложение или claude.ai).';}};
 const emsg=e=>ECODE[e&&e.code]||('Ошибка запроса'+(e&&e.code?' ('+e.code+')':'')+'.');
-function normIt(x,t,u){return {ru:String(x.ru).trim(),ko:String(x.ko).trim(),alt:Array.isArray(x.alt)?x.alt.filter(a=>typeof a==='string'&&a.trim()):[],t:GBY[x.t]?x.t:t,u:x.u||u||'',w:Array.isArray(x.w)?x.w.map(String):[],traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict};}
+function normIt(x,t,u){return {ru:String(x.ru).trim(),ko:String(x.ko).trim(),alt:Array.isArray(x.alt)?x.alt.filter(a=>typeof a==='string'&&a.trim()):[],t:GBY[x.t]?x.t:t,u:x.u||u||'',w:Array.isArray(x.w)?x.w.map(String):[],traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict,say:x.say||''};}
 function valid(r,sl){if(!Array.isArray(r))throw {code:'invalid_json'};const n=sl.length;
  const it=r.filter(x=>x&&typeof x.ru==='string'&&typeof x.ko==='string'&&x.ru.trim()&&x.ko.trim()).slice(0,n).map((x,k)=>normIt(x,(sl[k]||{}).t,(sl[k]||{}).u));
  if(it.length<Math.ceil(n/2))throw {code:'invalid_json'};return it;}
@@ -627,7 +627,7 @@ function ruH(t){return esc(t).replace(/\((?:[^()]|\([^()]*\))*\)/g,m=>`<span cla
 function unkHTML(s,i,k,x,r,u,rk){const ref=rk?(r.fix||x.ko):x.ru;
  return `<div class="gi"><div class="gq sm${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):esc(x.ko)}</div>
  <div class="gv unk">${rk?markDiff(ref,u,'gdx'):esc(u)} <span class="gvt">${rk?'не распознано':'сверь сам'}</span></div>
- <div class="gref"${rk?` data-say="${esc(ref)}"`:''}>${rk?'Ближайший эталон: '+markDiff(u,ref):'Эталон: '+esc(ref)}</div>
+ <div class="gref"${rk?` data-say="${esc(x.say||ref)}"`:''}>${rk?'Ближайший эталон: '+markDiff(u,ref):'Эталон: '+esc(ref)}</div>
  ${rk?`<div class="gunk">Автоматически не распознано. Если твой вариант тоже верен — засчитай.</div>`:''}
  <div class="gft"><span class="gtt">${GL(GBY[x.t])}</span><span><button class="chip gfl" data-a="gself" data-v="ok" data-k="${k}">${rk?'Засчитать':'Верно'}</button> <button class="chip gfl" data-a="gself" data-v="bad" data-k="${k}">${rk?'Моя ошибка':'Неверно'}</button></span></div></div>`;}
 async function chkBlock(){const s=EXA();if(!s)return;const i=s.bi,sid=s.id,key=sid+'|c'+i;if(GR.ck[key]||!s.bl[i]||s.res[i])return;if(s.dir==='au'){exSave();return auChk(s,i);}
@@ -681,8 +681,8 @@ function blockHTML(s,title,foot){if(s.kind==='les'&&!s.bl[s.bi]){const x=lesStat
   const ref=rk?x.ko:x.ru,fx=r.fix||ref,wk=s.id+'|'+i+'|'+k;
   return `<div class="gi"><div class="gq sm${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):esc(x.ko)}</div>
   <div class="gv ${bad?'bad':'ok'}">${bad&&rk&&u&&u!=='-'?markDiff(fx,u,'gdx'):esc(u||'—')} <span class="gvt">${bad?'ошибка':r.v==='typo'?'описка — засчитано':'верно'}</span></div>`+
-  (bad?`<div class="gfix"${rk?` data-say="${esc(fx)}"`:''}>${rk&&u&&u!=='-'?markDiff(u,fx):esc(fx)}</div>${r.note?`<div class="gnote">${esc(r.note)}</div>`:''}${rk&&r.fix&&kn(ref)!==kn(fx)?`<div class="gref" data-say="${esc(ref)}">Можно и так: ${esc(ref)}</div>`:''}`
-   :`<div class="gref"${rk?` data-say="${esc(ref)}"`:''}>Эталон: ${esc(rk?tplK(x):ref)}${rk?' ▶':''}</div>`)+
+  (bad?`<div class="gfix"${rk?` data-say="${esc(x.say||fx)}"`:''}>${rk&&u&&u!=='-'?markDiff(u,fx):esc(fx)}</div>${r.note?`<div class="gnote">${esc(r.note)}</div>`:''}${rk&&r.fix&&kn(ref)!==kn(fx)?`<div class="gref" data-say="${esc(ref)}">Можно и так: ${esc(ref)}</div>`:''}`
+   :`<div class="gref"${rk?` data-say="${esc(x.say||ref)}"`:''}>Эталон: ${esc(rk?tplK(x):ref)}${rk?' ▶':''}</div>`)+
   (r.why?`<div class="gwhy">${txt(r.why)}</div>`:GR.why[wk]?`<p class="gnote">Объясняю…</p>`:r.whyErr?`<div class="gnote">${esc(r.whyErr)}</div>`:'')+
   `<div class="gft"><span class="gtt">${GL(GBY[x.t])}</span><span>${bad&&!OFF&&!r.why&&!GR.why[wk]?`<button class="chip gfl" data-a="gwhy" data-k="${k}">Почему?</button> `:''}<button class="chip gfl" data-a="gfl" data-k="${k}">${bad?'Засчитать':'Не засчитывать'}</button></span></div></div>`;}).join('');
  return h+foot;}

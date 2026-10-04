@@ -97,6 +97,11 @@ APP=[
  ("$('tnx').disabled=fi<0||fi>=FLOW.length-1;","$('tnx').disabled=fi<0;",1),
  ("$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);};",
   "$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};",1),
+ # озвучка эталона: у заданий «прочитай» эталон русскими буквами — озвучивается греческое слово (x.say)
+ ("traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict};}","traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict,say:x.say||''};}",1),
+ (":`<div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>Эталон: ",":`<div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>Эталон: ",1),
+ ("<div class=\"gfix\"${rk?` data-say=\"${esc(fx)}\"`:''}>","<div class=\"gfix\"${rk?` data-say=\"${esc(x.say||fx)}\"`:''}>",1),
+ (" <div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>${rk?'Ближайший эталон: '"," <div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>${rk?'Ближайший эталон: '",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),

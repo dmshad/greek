@@ -84,7 +84,7 @@ const BANK=(()=>{
  const all=g=>Object.values(POOL[g]||{}).flat();
  const has=g=>all(g).length>0;
  // элемент блока в формате движка: ko — показ, шаблоны — в alt
- function item(x,g){const ko=show(x.ko);return {ru:x.ru,ko,alt:[x.ko,...(x.alt||[])],traps:x.traps||[],t:g,u:x.u||'',w:[],bid:x.id,strict:!!x.strict};}
+ function item(x,g){const ko=show(x.ko);return {ru:x.ru,ko,alt:[x.ko,...(x.alt||[])],traps:x.traps||[],t:g,u:x.u||'',w:[],bid:x.id,strict:!!x.strict,say:x.say||''};}
  // часть: по кругу, i-й блок
  function part(g,p,i,n=5){const a=(POOL[g]||{})[p]||[];if(!a.length)return null;const L=a.length,st=(i*n)%L;
   const rot=Array.from({length:L},(_,k)=>a[(st+k)%L]);return pick(rot,Math.min(n,L),null,new Set()).map(x=>item(x,g));}
