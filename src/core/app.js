@@ -231,7 +231,7 @@ function pruneST(){try{
  if(ST.lesArc&&typeof COURSE==='object'&&COURSE.on){const keep=new Set([COURSE.cur,COURSE.view].filter(Boolean));for(const g of Object.keys(ST.lesArc))if(!keep.has(g))delete ST.lesArc[g];}
  const S=Object.values((ST.les&&ST.les.by)||{});for(const L of Object.values(ST.lesArc||{}))S.push(...Object.values((L&&L.by)||{}));
  for(const s of S){if(!s||!s.bl||typeof s.bi!=='number')continue;
-  for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]){delete s.bl[i];if(s.ans)delete s.ans[i];
+  for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]&&!s.res[i].some(r=>r&&r.v==='bad')){delete s.bl[i];if(s.ans)delete s.ans[i];
    s.res[i]=s.res[i].map(r=>r&&typeof r==='object'?{v:r.v,e:r.e||'',man:r.man||0}:r);}}}
  if(ST.lesArc&&!Object.keys(ST.lesArc).length)delete ST.lesArc;
 }catch(e){}}
@@ -734,7 +734,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-cnext]');i
  CNX=0;const nx=COURSE.steps.slice(COURSE.idx+1).find(x=>COURSE.loaded(x));if(!nx)return;COURSE.setView(null);COURSE.set(nx.id);reloadApp();},true);
 function lesSummary(){const L=LES(),rows=[],bad=[];
  for(const st of LSTG){if(st.kind==='end')continue;const s=L.by[st.id];if(!s)continue;let n=0,ok=0,tot=0;
-  for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:s.bl[i][k],r,a:((s.ans[i]||[])[k]||'').trim(),s});});}
+  for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:(s.bl[i]&&s.bl[i][k])||{ru:'(текст задания не сохранён)',ko:'—',t:'',u:''},r,a:((s.ans[i]||[])[k]||'').trim(),s});});}
   if(n)rows.push(`${st.label}: ${n} бл., ${ok}/${tot}`);}
  const grp=(f)=>{const m={};bad.forEach(b=>{const k=f(b);if(!k)return;(m[k]=m[k]||{n:0,bl:new Set()}).n++;m[k].bl.add(b.st.id+b.i);});return m;};
  const byE=grp(b=>EN[b.r.e]||b.r.e||'другое'),byU=grp(b=>b.x.t===CURG.id&&b.x.u?b.x.u:'');

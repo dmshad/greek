@@ -59,6 +59,12 @@ APP=[
   "function planSeries(sel){const T=GTOP.filter(g=>gMod(g).length&&!(g.nokr&&ST.grd==='kr')&&",1),
  ("if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",
   "if(s&&!s.plan.length)return '<p class=\"gp\">Для этого направления пока нет пройденных тем. Переключи направление кнопкой выше.</p>';if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",1),
+ # итог урока: тексты пройденных блоков могли быть удалены чисткой состояния — не падать
+ ("for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:s.bl[i][k],r,",
+  "for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:(s.bl[i]&&s.bl[i][k])||{ru:'(текст задания не сохранён)',ko:'—',t:'',u:''},r,",1),
+ # чистка состояния: блоки с ошибками не удаляются — они нужны для итога темы
+ ("for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]){delete s.bl[i];",
+  "for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]&&!s.res[i].some(r=>r&&r.v==='bad')){delete s.bl[i];",1),
  # «Диалог» — только когда в контенте есть готовые диалоги
  ("let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}",
   "const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m=\"dlg\"]');if(b&&!HASD)b.hidden=true;}\nlet A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';",1),
