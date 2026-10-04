@@ -307,7 +307,7 @@ function nextBlock(s){const st=STG[s.stage];let ids;
  else{if(!s.blocks||s.bi>=s.blocks.length-1){s.blocks=buildSeries(st.kind);s.bi=-1;s.cov=null;}s.bi++;ids=s.blocks[s.bi];}
  ids=stitch(ids,s.tail||[]);s.bn++;s.q=ids.map(id=>({id}));s.pos=0;s.res={};s.rep=0;s.ph='q';s.cur={st:'ask',r:null,v:''};}
 function sessFor(id,dir){const s={stage:id,dir:dir||STG[id].dir,bn:0,blocks:null,bi:-1,tail:[],cov:null};nextBlock(s);return s;}
-function initSess(){if(S.app==='rev'){if(!ST.rs){ST.rs={};if(ST.rsess){ST.rs[ST.rsess.dir||'rk']=ST.rsess;ST.rd=ST.rsess.dir||'rk';}delete ST.rsess;}
+function initSess(){if(S.app==='rev'){if(!REG.length)return false;if(!ST.rs){ST.rs={};if(ST.rsess){ST.rs[ST.rsess.dir||'rk']=ST.rsess;ST.rd=ST.rsess.dir||'rk';}delete ST.rsess;}
  ST.rd=ST.rd||'rk';if(!ST.rs[ST.rd])ST.rs[ST.rd]=sessFor('rev',ST.rd);return true;}
  if(!STAGES.length)return false;
  if(!ST.sess||ST.sess.theme!==THEME){ST.sessArc=ST.sessArc||{};if(ST.sess&&ST.sess.theme!=null)ST.sessArc[ST.sess.theme]=ST.sess;ST.sess=ST.sessArc[THEME]||{theme:THEME,cur:STAGES[0].id,by:{}};delete ST.sessArc[THEME];}
@@ -358,7 +358,7 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
   if(c.st==='ask'){ta.value=c.v||'';ta.className='';$('tout').innerHTML='';$('tbtns').innerHTML=btn('chk','Проверить',1)+btn('dk','Не знаю');if(focus)ta.focus();}
   else{ta.value=c.v||'';ta.className=c.r==='bad'?'bad':'ok';
    const res=c.dk?'<div class="tres bad">Не знаю</div>':c.ok?'<div class="tres ok">Верно</div>':(c.r==='ok'?'<div class="tres ok">Опечатка — засчитано</div>':'<div class="tres bad">Ошибка</div>');
-   $('tout').innerHTML=res+`<div class="tans" data-say="${esc(w.ko)}">${esc(w.ko)} <span class="tr">[${esc(w.tr)}]</span></div>`+(!c.ok&&!c.dk?diffHTML(KNP(c.v),KNP(w.ko))+(c.note?`<div class="gnote">${esc(c.note)}</div>`:''):'');
+   $('tout').innerHTML=res+`<div class="tans" data-say="${esc(w.ko)}">${esc(w.ko)} <span class="tr">[${esc(w.tr)}]</span></div>`+(!c.ok&&!c.dk?(LANG.code==='ko'?diffHTML(kn(c.v),kn(w.ko)):`<div class="gv bad">${markDiff(KNP(w.ko),KNP(c.v),'gdx')}</div><div class="gfix">${markDiff(KNP(c.v),KNP(w.ko))}</div>`)+(c.note?`<div class="gnote">${esc(c.note)}</div>`:''):'');
    $('tbtns').innerHTML=(c.dk||c.ok?'':btn('typo','Опечатка',0,c.r==='ok','g'))+btn('next','Дальше',1);}}
  else{
   $('tp').className='tp k';$('tp').textContent=w.ko;$('tp').dataset.say=w.ko;$('thint').textContent='';ta.hidden=true;ta.blur();
@@ -417,7 +417,7 @@ function openList(){const s=SS(),st=STG[s.stage],L=st.kind==='sec'?CURW[st.i]:CU
 $('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);};
 function renderT(){tabHi();if(xMode())return renderX();if(exMode())return renderEX();$('tdir').hidden=false;$('jump').innerHTML='';
  if(!TREADY){$('list').innerHTML='<div class="empty">Загрузка…</div>';hh();return;}
- if(!initSess()){$('list').innerHTML='<div class="empty">Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.</div>';$('trainbars').hidden=false;$('tdir').hidden=true;$('tnx').hidden=true;$('tst').hidden=true;$('tcnt').textContent='';hh();return;}
+ if(!initSess()){$('list').innerHTML='<div class="empty">'+(S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>';$('trainbars').hidden=false;$('tdir').hidden=true;$('tnx').hidden=true;$('tst').hidden=true;$('tcnt').textContent='';hh();return;}
  $('trainbars').hidden=false;
  if(!$('tcard')){$('list').innerHTML=`<div class="trn" id="tcard"><div class="thd"><div class="tmeta" id="tmeta"></div><button class="chip" id="tls">Список</button></div><div class="tp" id="tp"></div><div class="thint" id="thint"></div><input id="ta" lang="${LANG.code}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ"><div id="tout"></div><div class="tbtns" id="tbtns"></div></div><div id="tsum" hidden></div>`;bindT();}
  updT(false);}
@@ -1310,6 +1310,7 @@ $('offb').onclick=async e=>{e.stopPropagation();
  try{if(on){if(seeded||!LSX.getItem('trainer_off'))LSX.setItem('trainer_off',JSON.stringify(ST));LSX.setItem('offmode','1');}else LSX.removeItem('offmode');}catch(x){}
  OFFT=on;OFF=!HASC||on;LSK=OFFT?'trainer_off':'trainer';SMPP=null;REF=null;TREADY=false;TLOCAL=false;
  ST={v:1,weak:{},stats:{},sess:null,last:[]};offUI();initST();};
-let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}
+const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m="dlg"]');if(b&&!HASD)b.hidden=true;}
+let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';
 setApp(['gram','train','rev','dlg'].includes(A0)?A0:'dict');
 

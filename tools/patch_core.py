@@ -18,8 +18,13 @@ APP=[
  # проверка слова: допустимые варианты (w.alt) и пояснение (ударение, написание)
  ("c.v=v;c.ok=kn(v)===kn(w.ko)?1:0;c.r=c.ok?'ok':'bad';",
   "c.v=v;c.ok=[w.ko,...(w.alt||[])].some(x=>kn(v)===kn(x))?1:0;c.r=c.ok?'ok':'bad';c.note=c.ok?'':(LANG.wnote?LANG.wnote(v,w.ko):'');",1),
+ # разбор ошибки: у корейского — по слогам и чамо, у остальных — подсветка букв
  ("(!c.ok&&!c.dk?diffHTML(kn(c.v),kn(w.ko)):'')",
-  "(!c.ok&&!c.dk?diffHTML(KNP(c.v),KNP(w.ko))+(c.note?`<div class=\"gnote\">${esc(c.note)}</div>`:''):'')",1),
+  "(!c.ok&&!c.dk?(LANG.code==='ko'?diffHTML(kn(c.v),kn(w.ko)):`<div class=\"gv bad\">${markDiff(KNP(w.ko),KNP(c.v),'gdx')}</div><div class=\"gfix\">${markDiff(KNP(c.v),KNP(w.ko))}</div>`)+(c.note?`<div class=\"gnote\">${esc(c.note)}</div>`:''):'')",1),
+ # повторение слов, когда пройденных слов ещё нет
+ ("function initSess(){if(S.app==='rev'){","function initSess(){if(S.app==='rev'){if(!REG.length)return false;",1),
+ ("$('list').innerHTML='<div class=\"empty\">Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.</div>'",
+  "$('list').innerHTML='<div class=\"empty\">'+(S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>'",1),
  # поиск в словаре: без ударений
  ("return norm(w.ko).includes(S.q)||norm(w.ru).includes(S.q)||norm(w.tr).includes(S.q);}",
   "const nb=s=>(LANG.bare?LANG.bare(norm(s)):norm(s)).replace(/э/g,'е'),q=nb(S.q);return nb(w.ko).includes(q)||nb(w.ru).includes(q)||nb(w.tr).includes(q);}",1),
@@ -45,6 +50,9 @@ APP=[
  ("app:'ko-trainer'","app:LANG.code+'-trainer'",1),
  ("d.app!=='ko-trainer'","d.app!==LANG.code+'-trainer'",1),
  ("'korean_progress_'","'greek_progress_'",1),
+ # «Диалог» — только когда в контенте есть готовые диалоги
+ ("let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}",
+  "const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m=\"dlg\"]');if(b&&!HASD)b.hidden=true;}\nlet A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';",1),
  # «Числа» и «Формы» — пока только у языков с движком X
  ("function tabHi(){if(S.app!=='rev'&&(S.ttab==='n'||S.ttab==='c'))S.ttab='w';",
   "function tabHi(){if((S.app!=='rev'||LANG.noX)&&(S.ttab==='n'||S.ttab==='c'))S.ttab='w';if(LANG.noX&&(S.rtab==='n'||S.rtab==='c'))S.rtab='w';",1),
