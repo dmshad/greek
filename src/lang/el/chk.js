@@ -15,7 +15,8 @@ const CHK=(()=>{
   return [...new Set(seq().map(raw?(x=>x.replace(/\s+([,.!;?])/g,'$1').replace(/\s+/g,' ').trim()):norm))];
  }
  /* ---- нормализация: регистр, ς/σ, латиница, пунктуация ---- */
- function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim();}
+ // κι — форма και (перед гласной и в речи): при сравнении это одно слово
+ function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim().replace(/(^| )κι(?= |$)/g,'$1και');}
  const nsp=s=>s.replace(/\s/g,'');
  function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
