@@ -169,7 +169,7 @@ function mMatch(m){const q=gn(S.q);return [m.id,m.func,KIND[m.kind],...(m.forms|
 const MEMO=()=>(D.memos||[]).filter(m=>!m.after||GBY[m.after]);
 const mmMatch=m=>{const q=S.q.toLowerCase();return (m.title+' '+m.sections.map(x=>x.title+' '+x.body).join(' ')).toLowerCase().includes(q);};
 function memoRow(m){return `<div class="row" data-memo="${esc(m.id)}"><div class="txt gtr"><span class="gn">✎</span><span class="gt">${esc(m.title)}</span></div></div>`;}
-function openMemo(id){const m=MEMO().find(x=>x.id===id);if(!m)return;let h=head('Памятка',m.title);for(const x of m.sections)h+=gsec(esc(x.title),txt(x.body)+exL(x.ex));showSheet(h);}
+function openMemo(id){const m=MEMO().find(x=>x.id===id);if(!m)return;let h=head('Памятка',m.title);for(const x of m.sections.filter(x=>!x.after||GBY[x.after]))h+=gsec(esc(x.title),txt(x.body)+exL(x.ex));showSheet(h);}
 function tRow(g){return `<div class="row" data-g="${esc(g.id)}"><div class="txt gtr"><span class="gn">${GS2(g)}</span><span class="gt">${esc(g.title)}</span></div></div>`;}
 function mRow(m){return `<div class="row" data-m="${esc(m.id)}"><div class="txt"><span class="ko">${esc(m.id)}</span><span class="kd">${KIND[m.kind]||''} · тема ${m.topic}</span><div class="rsub">${esc(short(m))}</div></div></div>`;}
 function conjHTML(){const FS=CJ.forms.filter(f=>CJ.stems.some(s=>CJ.cells[s.id+'|'+f.id]));if(!CJ.stems.length)return '<div class="empty">Пока пусто.</div>';

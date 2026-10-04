@@ -38,10 +38,20 @@ for n,k,name in THEMES:
             order+=1; blocks.append({'id':f'g{n}','label':f'Т{n} · {name}','order':order})
             for r in tw: add_word(m,r,f'g{n}')
         if hasattr(m,'bank'): bank[f'g{n}']=m.bank()
+# памятка «Артикль»: вступление + разделы из готовых тем (раздел виден, когда открыта его тема)
+memos=[]
+asec=[]
+for n,k,name in THEMES:
+    if n in READY and k!='С':
+        m=importlib.import_module(f't{n:02d}')
+        for x in getattr(m,'ART_MEMO',[]): asec.append(dict(x,after=f'g{n}'))
+if asec:
+    intro={'title':'Как пользоваться','body':'Артикль в греческом ставится чаще, чем кажется по-русски. Общая логика: **ο/η/το** — известное, конкретное, имя или «вообще» (обобщение); **без артикля** — «кто такой / что такое», неопределённое количество; **ένας/μία/ένα** — «один, какой-то».\nПамятка пополняется с каждой темой: правило, примеры и номер темы, где оно разобрано.','ex':[]}
+    memos.append({'id':'m-art','title':'Артикль: когда нужен и когда нет','after':asec[0]['after'],'sections':[intro]+asec})
 first=next(s for s in course if (s['k']=='g' and int(s['g'][1:]) in READY) or (s['k']=='w' and int(s['id'][1:]) in READY))
 meta={'version':2,'currentBlock':None,'currentGrammar':first['g'] if first['k']=='g' else None,'posTs':0}
 D={'meta':meta,'blocks':blocks,'notes':{},'words':words,'grammar':grammar,'morphs':[],'conj':{'stems':[],'forms':[],'cells':{}},
-   'bank':bank,'drill':{'weak':[],'skip':[]},'course':course,'memos':[],'dlg':[]}
+   'bank':bank,'drill':{'weak':[],'skip':[]},'course':course,'memos':memos,'dlg':[]}
 os.makedirs(R+'/content/el',exist_ok=True)
 json.dump(D,open(R+'/content/el/data.json','w',encoding='utf-8'),ensure_ascii=False,separators=(',',':'))
 print('data.json:',len(words),'слов,',len(grammar),'тем грамматики, готовы темы',sorted(READY),', шагов курса',len(course))
