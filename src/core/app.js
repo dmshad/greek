@@ -349,7 +349,7 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  $('tst').innerHTML=STAGES.map(x=>`<button class="chip${x.id===s.stage?' on':''}" data-st="${x.id}">${x.label}</button>`).join('')+(rv?'':`<button class="chip" data-ws="1">Итог темы</button>`);
  {const o=$('tst').querySelector('.on');if(o)o.scrollIntoView({inline:'nearest',block:'nearest'});}
  $('tdir').textContent=s.dir==='rk'?'РУС → ГРЕ':'ГРЕ → РУС';$('tcnt').textContent='Блок '+s.bn;
- const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0||fi>=FLOW.length-1;
+ const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0;
  $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
  const ta=$('ta');
  if(!rv&&st.kind==='sec'&&s.dir==='rk'&&!s.seen&&s.bn===1&&s.pos===0&&!s.rep&&!Object.keys(s.res||{}).length){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=introHTML(s,st);ta.blur();hh();return;}
@@ -420,7 +420,7 @@ $('tdir').onclick=()=>{if(!TREADY)return;if(S.app==='rev'&&(S.rtab==='n'||S.rtab
 function openList(){const s=SS(),st=STG[s.stage],L=st.kind==='sec'?CURW[st.i]:CURW.flat();
  showSheet(`<div class="top"><div class="gtitle">${st.kind==='sec'?esc(st.label):'Слова темы'}</div><button class="x" id="cx" aria-label="Закрыть">×</button></div>`+
   L.map(w=>`<div class="lw">${esc(w.ru)} — <span class="lwk">${esc(w.ko)}</span></div>`).join(''));}
-$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);};
+$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};
 function renderT(){tabHi();if(xMode())return renderX();if(exMode())return renderEX();$('tdir').hidden=false;$('jump').innerHTML='';
  if(!TREADY){$('list').innerHTML='<div class="empty">Загрузка…</div>';hh();return;}
  if(!initSess()){$('list').innerHTML='<div class="empty">'+(S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>';$('trainbars').hidden=false;$('tdir').hidden=true;$('tnx').hidden=true;$('tst').hidden=true;$('tcnt').textContent='';hh();return;}

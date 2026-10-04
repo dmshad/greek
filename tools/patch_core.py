@@ -93,6 +93,10 @@ APP=[
  ("...(CURG&&CURG.nokr?[]:[{id:'mixkr'","...(CURG&&(CURG.nokr||!PREVG)?[]:[{id:'mixkr'",1),
  ("→ вся тема → смешанные РУС→ГРЕ${CURG.nokr?'':' → ГРЕ→РУС'} → итог.</p>",
   "→ вся тема${PREVG?' → смешанные РУС→ГРЕ'+(CURG.nokr?'':' → ГРЕ→РУС'):''} → итог.</p>",1),
+ # «Дальше» на последнем этапе словарной темы ведёт в «Итог темы»
+ ("$('tnx').disabled=fi<0||fi>=FLOW.length-1;","$('tnx').disabled=fi<0;",1),
+ ("$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);};",
+  "$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),
