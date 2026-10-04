@@ -5,7 +5,6 @@ TITLE='Чтение 2: сочетания букв'
 MEANING=('Две буквы — один звук: ου = у, αι = э, ει / οι = и; μπ = б, ντ = д, τσ = ц. Перед гласной γ звучит как «й», а безударное ι почти сливается со следующей гласной.\n'
  'Упражнения — как в теме 1, на словах и выражениях темы «Приветствия» и новых словах.')
 TASK_RK='запиши строчными с ударением'
-TASK_KR='прочитай и запиши русскими буквами — сверь с эталоном'
 def SCHEMA():
     t=lambda *ws:' · '.join(f'{w} [{T(w)}]' for w in ws)
     return [
@@ -68,7 +67,7 @@ BANK2=[rd('γκρι','серый','u2'),rd('τσάντα','сумка','u2'),rd(
 BANK3=[rd('γιατρός','врач','u3'),rd('μακαρόνια','макароны','u3'),rd('δουλειά','работа','u3'),rd('οικογένεια','семья','u3'),rd('ποιος;','кто?','u3')]
 def topic():
     ch=lambda a:[a[i:i+5] for i in range(0,len(a),5)]
-    return {'id':ID,'n':N,'title':TITLE,'meaning':MEANING,'task_rk':TASK_RK,'task_kr':TASK_KR,'schema':SCHEMA(),'sections':SECTIONS,'usage':USAGE,
+    return {'id':ID,'n':N,'title':TITLE,'meaning':MEANING,'task_rk':TASK_RK,'nokr':True,'schema':SCHEMA(),'sections':SECTIONS,'usage':USAGE,
      'rel':[{'id':'g1'}],'new':[],
      'parts':[{'id':'q1','title':'Сочетания гласных','intro':'ου = у, αι = э, ει / οι = и; αυ, ευ — ав/аф, эв/эф. Ударение — над второй буквой пары.',
                'schema':[0],'sections':['s1','s2','s3'],'usage':['u1'],'ex':ch(P1)},

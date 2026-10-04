@@ -50,6 +50,15 @@ APP=[
  ("app:'ko-trainer'","app:LANG.code+'-trainer'",1),
  ("d.app!=='ko-trainer'","d.app!==LANG.code+'-trainer'",1),
  ("'korean_progress_'","'greek_progress_'",1),
+ # тема без этапа ГРЕ→РУС (g.nokr: темы чтения) — ни в уроке, ни в повторении в этом направлении
+ ("{id:'mixkr',kind:'mix',label:'Смешанные ГРЕ→РУС',size:10,dir:'kr',extra:2},",
+  "...(CURG&&CURG.nokr?[]:[{id:'mixkr',kind:'mix',label:'Смешанные ГРЕ→РУС',size:10,dir:'kr',extra:2}]),",1),
+ ("→ вся тема → смешанные РУС→ГРЕ → ГРЕ→РУС → итог.</p>",
+  "→ вся тема → смешанные РУС→ГРЕ${CURG.nokr?'':' → ГРЕ→РУС'} → итог.</p>",1),
+ ("function planSeries(sel){const T=GTOP.filter(g=>gMod(g).length&&",
+  "function planSeries(sel){const T=GTOP.filter(g=>gMod(g).length&&!(g.nokr&&ST.grd==='kr')&&",1),
+ ("if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",
+  "if(s&&!s.plan.length)return '<p class=\"gp\">Для этого направления пока нет пройденных тем. Переключи направление кнопкой выше.</p>';if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",1),
  # «Диалог» — только когда в контенте есть готовые диалоги
  ("let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}",
   "const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m=\"dlg\"]');if(b&&!HASD)b.hidden=true;}\nlet A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';",1),
