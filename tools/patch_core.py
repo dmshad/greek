@@ -118,6 +118,10 @@ APP=[
  # памятка: раздел с after виден только когда открыта его тема
  ("for(const x of m.sections)h+=gsec(esc(x.title),txt(x.body)+exL(x.ex));showSheet(h);}",
   "for(const x of m.sections.filter(x=>!x.after||GBY[x.after]))h+=gsec(esc(x.title),txt(x.body)+exL(x.ex));showSheet(h);}",1),
+ # подсветка различий: регистр и σ/ς не считаются разницей
+ ("L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:","L[i][j]=DEQ(A[i],B[j])?L[i+1][j+1]+1:",1),
+ ("while(i<n&&j<m){if(A[i]===B[j]){keep[j]=true;","while(i<n&&j<m){if(DEQ(A[i],B[j])){keep[j]=true;",1),
+ ("function markDiff(a,b,cl){","const DEQ=(x,y)=>x===y||x.toLowerCase().replace('ς','σ')===y.toLowerCase().replace('ς','σ');\nfunction markDiff(a,b,cl){",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),

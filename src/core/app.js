@@ -653,9 +653,10 @@ function grCov(s){const ids=new Set(),ts=new Set();
  for(let i=0;i<s.plan.length;i++){const it=s.bl[i];if(!it||!s.res[i])continue;const m={};[...s.plan[i].w,...s.plan[i].c].forEach(id=>{if(BY[id])m[kn(BY[id].ko)]=id;});
   it.forEach(x=>{ts.add(x.t);x.w.forEach(k=>{const id=m[kn(k)];if(id)ids.add(id);});});}
  return {w:ids.size,t:ts.size};}
+const DEQ=(x,y)=>x===y||x.toLowerCase().replace('ς','σ')===y.toLowerCase().replace('ς','σ');
 function markDiff(a,b,cl){const A=[...a],B=[...b],n=A.length,m=B.length,L=Array.from({length:n+1},()=>new Int16Array(m+1));
- for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
- const keep=new Array(m).fill(false);let i=0,j=0;while(i<n&&j<m){if(A[i]===B[j]){keep[j]=true;i++;j++;}else if(L[i+1][j]>=L[i][j+1])i++;else j++;}
+ for(let i=n-1;i>=0;i--)for(let j=m-1;j>=0;j--)L[i][j]=DEQ(A[i],B[j])?L[i+1][j+1]+1:Math.max(L[i+1][j],L[i][j+1]);
+ const keep=new Array(m).fill(false);let i=0,j=0;while(i<n&&j<m){if(DEQ(A[i],B[j])){keep[j]=true;i++;j++;}else if(L[i+1][j]>=L[i][j+1])i++;else j++;}
  let o='',on=false;B.forEach((c,k)=>{const L2=/[\p{L}\p{N}]/u.test(c),d=!keep[k]&&L2;if(d&&!on){o+=`<span class="${cl||'gdm'}">`;on=true;}if(!d&&on&&(L2||!c.trim()===false)){o+='</span>';on=false;}o+=esc(c);});return o+(on?'</span>':'');}
 function fitTA(){document.querySelectorAll('#gcard textarea.gin').forEach(t=>{t.style.height='auto';t.style.height=t.scrollHeight+2+'px';});}
 const tk=t0=>`<span id="gtk" data-t0="${t0}">${sec2(t0)}</span>`;
