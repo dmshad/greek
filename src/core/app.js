@@ -340,6 +340,10 @@ function sumHTML(s,st){const ids=s.q.filter(x=>!x.rep).map(x=>x.id),ok=ids.filte
  if(end)h+=`<p class="tcov">${st.kind==='all'?'Этап пройден':'Серия завершена'}. Охват: ${s.cov} из ${W.length} слов.</p><div class="tbtns">${btn('ns',st.kind==='all'?'Ещё раз':'Новая серия',1)}</div>`;
  else h+=`<div class="tbtns">${btn('nb','Следующий блок',1)}</div>`;
  return h+'</div>';}
+function introHTML(s,st){const L=CURW[st.i]||[];return `<div class="trn"><div class="tmeta">${esc(st.label)} · новые слова</div><p class="gp">Посмотри и послушай слова раздела — нажми на слово или пример. Потом проверка: перевод с русского.</p>`+
+ L.map(w=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div><span class="ko" data-say="${esc(w.ko)}">${esc(w.ko)}</span> <span class="tr">[${esc(w.tr)}]</span></div><div class="ru">${esc(w.ru)}</div>`+
+ (w.extra?`<div class="mut" style="font-size:15px">${esc(w.extra)}</div>`:'')+(w.ex||[]).slice(0,1).map(e=>`<div class="mut" style="font-size:16px;margin-top:3px"><span data-say="${esc(e.ko)}">${esc(e.ko)}</span> — ${esc(e.ru)}</div>`).join('')+'</div>').join('')+
+ `<div class="tbtns">${btn('wstart','Начать',1)}</div></div>`;}
 function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  $('tst').hidden=rv;$('tnx').hidden=rv;$('tls').hidden=rv;
  $('tst').innerHTML=STAGES.map(x=>`<button class="chip${x.id===s.stage?' on':''}" data-st="${x.id}">${x.label}</button>`).join('')+(rv?'':`<button class="chip" data-ws="1">Итог темы</button>`);
@@ -348,6 +352,7 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0||fi>=FLOW.length-1;
  $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
  const ta=$('ta');
+ if(!rv&&st.kind==='sec'&&s.dir==='rk'&&!s.seen&&s.bn===1&&s.pos===0&&!s.rep&&!Object.keys(s.res||{}).length){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=introHTML(s,st);ta.blur();hh();return;}
  if(s.ph==='sum'){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=sumHTML(s,st);ta.blur();hh();return;}
  $('tcard').hidden=false;$('tsum').hidden=true;$('tsum').innerHTML='';
  const it=s.q[s.pos],w=BY[it.id],c=s.cur;
@@ -376,6 +381,7 @@ function check(){const s=SS(),c=s.cur,w=BY[s.q[s.pos].id],v=$('ta').value;if(c.s
  const y=otherSyn(w,v);if(y){$('tout').innerHTML=`<div class="tres bad">${esc(y.ko)} — это «${esc(y.ru)}». Загадано другое слово — «${esc(w.ru)}».</div>`;$('ta').select();return;}
  c.v=v;c.ok=[w.ko,...(w.alt||[])].some(x=>kn(v)===kn(x))?1:0;c.r=c.ok?'ok':'bad';c.note=c.ok?'':(LANG.wnote?LANG.wnote(v,w.ko):'');c.dk=0;c.st='shown';saveST();updT();}
 function act(a){const s=SS(),c=s.cur;
+ if(a==='wstart'){s.seen=1;saveST();scrollTo(0,0);return updT(true);}
  if(a==='chk')return check();
  if(a==='next'){adv(s,c.r);return updT(true);}
  if(a==='kok'||a==='kno'){adv(s,a==='kok'?'ok':'bad');return updT();}
