@@ -19,7 +19,12 @@ const LANG=(()=>{
  const PAIR={'πού':'πού — «где», που — «который, что»','πώς':'πώς — «как», πως — «что» (союз)','ή':'ή — «или», η — артикль'};
  const accN=w=>(w.normalize('NFD').match(/\u0301/g)||[]).length;
  // пояснение к неверному ответу: ударение или «звучит так же, пишется иначе»
- function wnote(v,ref){const A=words(v),B=words(ref),B0=W0(ref);if(!A.length||A.length!==B.length)return '';
+ const ARTS=new Set(['ο','η','το','οι','τα']);
+ function wnote(v,ref){const A=words(v),B=words(ref),B0=W0(ref);if(!A.length)return '';
+  // артикль у существительного
+  if(B.length===A.length+1&&ARTS.has(B[0])&&A.join(' ')===B.slice(1).join(' '))return 'Существительное учим с артиклем: '+B0.join(' ')+'.';
+  if(A.length===B.length&&A.length>1&&ARTS.has(A[0])&&ARTS.has(B[0])&&A[0]!==B[0]&&A.slice(1).join(' ')===B.slice(1).join(' '))return 'Неверный артикль: '+B0.join(' ')+'.';
+  if(A.length!==B.length)return '';
   const acc=[],spl=[];
   for(let i=0;i<A.length;i++){const a=A[i],b0=B[i],b=B0.length===B.length?B0[i]:pretty(b0);if(a===b0)continue;
    if(bare(a)===bare(b0)){const pr=PAIR[a]||PAIR[b];

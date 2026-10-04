@@ -10,6 +10,12 @@ VOC=[n for n,k,_ in THEMES if k=='С']
 BLK={n:[i*4+j+1 for j in range(4)] for i,n in enumerate(VOC)}   # 4 блока по 5 слов на словарную тему
 course,blocks,words,grammar,bank=[],[],[],[],{}
 order=0
+def add_word(m,r,block):
+    el=r[2]; assert el in m.WORDS, f'нет примеров/категории: {el}'
+    v=m.WORDS[el]; cat,ex=v[0],v[1]; extra=v[2] if len(v)>2 and v[2] else r[5]
+    words.append({'id':r[0],'ko':el,'tr':r[3],'pr':None,'ru':r[4],'cat':cat,'sub':None,'tag':None,'block':block,
+                  'weak':False,'usage':'','notes':[],'rel':[],'roots':[],'forms':None,
+                  'ex':[{'ko':a,'ru':b} for a,b in ex],'extra':extra,'alt':getattr(m,'ALT',{}).get(el,[])})
 for n,k,name in THEMES:
     if k=='С':
         course.append({'id':f'w{n}','k':'w','t':f'Т{n} · {name}','b':BLK[n]})
@@ -19,17 +25,18 @@ for n,k,name in THEMES:
         assert len(tw)==20,(n,len(tw))
         for j,b in enumerate(BLK[n]):
             order+=1; blocks.append({'id':b,'label':f'Т{n} · {name} · {j+1}','order':order})
-        for i,r in enumerate(tw):
-            el=r[2]; cat,ex=m.WORDS.get(el,('expr',[]))
-            assert el in m.WORDS, f'нет примеров/категории: {el}'
-            words.append({'id':r[0],'ko':el,'tr':r[3],'pr':None,'ru':r[4],'cat':cat,'sub':None,'tag':None,'block':BLK[n][i//5],
-                          'weak':False,'usage':'','notes':[],'rel':[],'roots':[],'forms':None,
-                          'ex':[{'ko':a,'ru':b} for a,b in ex],'extra':r[5]})
+        for i,r in enumerate(tw): add_word(m,r,BLK[n][i//5])
     else:
-        course.append({'id':f'g{n}','k':'g','g':f'g{n}','t':name})
+        tw=[r for r in rows if int(r[1])==n]
+        st={'id':f'g{n}','k':'g','g':f'g{n}','t':name}
+        if tw: st['b']=[f'g{n}']          # слова, которые вводит грамматическая тема (местоимения, предлоги…)
+        course.append(st)
         if n not in READY: continue
         m=importlib.import_module(f't{n:02d}')
         grammar.append(m.topic())
+        if tw:
+            order+=1; blocks.append({'id':f'g{n}','label':f'Т{n} · {name}','order':order})
+            for r in tw: add_word(m,r,f'g{n}')
         if hasattr(m,'bank'): bank[f'g{n}']=m.bank()
 first=next(s for s in course if (s['k']=='g' and int(s['g'][1:]) in READY) or (s['k']=='w' and int(s['id'][1:]) in READY))
 meta={'version':2,'currentBlock':None,'currentGrammar':first['g'] if first['k']=='g' else None,'posTs':0}

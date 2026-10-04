@@ -34,7 +34,7 @@ const COURSE=(()=>{
  const on=S.length>0&&idx>=0;
  if(on){
   const after=S.slice(idx+1),before=S.slice(0,idx),cs=S[idx];
-  const hidB=new Set(after.filter(s=>s.k==='w').flatMap(s=>(s.b||[]).map(String)));
+  const hidB=new Set(after.flatMap(s=>(s.b||[]).map(String)));
   const hidG=new Set(after.filter(s=>s.k==='g').map(s=>s.g));
   const hidN=new Set((D.grammar||[]).filter(g=>hidG.has(g.id)).map(g=>g.n));
   D.words=D.words.filter(w=>!hidB.has(String(w.block)));
@@ -608,7 +608,7 @@ function bankBlock(s,i){const u=new Set(s.used||[]);let r=null;
  else{const st=LBY[s.stage];if(!st||!CURG)return null;
   if(st.kind==='part')r=BANK.part(CURG.id,st.p.id,i);
   else if(st.kind==='all')r=BANK.whole(CURG.id,u,8);
-  else if(st.kind==='mix')r=BANK.mix(CURG.id,GTOP.filter(g=>g.n<CURG.n).map(g=>g.id),u);}
+  else if(st.kind==='mix')r=BANK.mix(CURG.id,GTOP.filter(g=>g.n<CURG.n&&!(st.dir==='kr'&&g.nokr)).map(g=>g.id),u);}
  s.used=[...u];return r;}
 function offChk(s,i){exSave();const a=s.ans[i]||[];
  s.res[i]=s.bl[i].map((x,k)=>{const u=(a[k]||'').trim();
@@ -668,7 +668,7 @@ function blockHTML(s,title,foot){if(s.kind==='les'&&!s.bl[s.bi]){const x=lesStat
  if(i+1<exMax(s)&&!s.bl[i+1]&&!GR.gen[nk]&&!GR.pf[nk]){GR.pf[nk]=1;setTimeout(()=>genBlock(s,i+1));}
  const a=s.ans[i]||[];let h='';
  if(s.dir==='au')return auBlockHTML(s,it,rs,a,title,foot,gc,ce);
- if(!rs){h=`<div class="tmeta">${title} · ${rk?((GBY[it[0].t]||{}).task_rk||'переведи на греческий'):((GBY[it[0].t]||{}).task_kr||'переведи на русский')}</div>`+it.map((x,k)=>
+ if(!rs){h=`<div class="tmeta">${title} · ${rk?(new Set(it.map(x=>x.t)).size>1?'выполни задания':((GBY[it[0].t]||{}).task_rk||'переведи на греческий')):(new Set(it.map(x=>x.t)).size>1?'переведи на русский':((GBY[it[0].t]||{}).task_kr||'переведи на русский'))}</div>`+it.map((x,k)=>
    `<div class="gi"><div class="gq${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):esc(x.ko)}</div>
    <textarea class="gin" rows="1" data-k="${k}" lang="${rk?LANG.code:'ru'}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="${k<it.length-1?'next':'done'}"${gc?' disabled':''}>${esc(a[k]||'')}</textarea></div>`).join('');
   const n=it.filter((x,k)=>(a[k]||'').trim()).length;

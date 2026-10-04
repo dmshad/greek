@@ -3,7 +3,7 @@
    латинские буквы-двойники приводятся к греческим (LANG.fold). */
 const CHK=(()=>{
  /* ---- шаблон: ( ) — необязательно, [a|b] — варианты ---- */
- function expand(t,lim=800){
+ function expand(t,lim=800,raw=false){
   let i=0;
   function seq(){let out=[''];while(i<t.length){const c=t[i];
     if(c===')'||c===']'||c==='|')break;
@@ -12,7 +12,7 @@ const CHK=(()=>{
     else{out=out.map(x=>x+c);i++;}}
    return out;}
   const cross=(a,b)=>{const r=[];for(const x of a)for(const y of b){r.push(x+y);if(r.length>lim)return r;}return r;};
-  return [...new Set(seq().map(norm))];
+  return [...new Set(seq().map(raw?(x=>x.replace(/\s+([,.!;?])/g,'$1').replace(/\s+/g,' ').trim()):norm))];
  }
  /* ---- нормализация: регистр, ς/σ, латиница, пунктуация ---- */
  function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim();}
@@ -24,7 +24,7 @@ const CHK=(()=>{
  const canon=s=>s;
  // item: {ko, alt[], traps[{a,why}]}; ответ пользователя
  // эталон для показа — в исходном виде (регистр, ς, пунктуация), если совпадает с найденным
- function check(item,ans){const r=check0(item,ans);if(r.best){const o=[item.ko,...(item.alt||[])].find(x=>x&&!/[()\[\]|]/.test(x)&&norm(x)===r.best);r.best=o||LANG.pretty(r.best);if(o&&(r.kind==='accent'||r.kind==='spelling'))r.note=LANG.wnote(ans,o)||r.note;}return r;}
+ function check(item,ans){const r=check0(item,ans);if(r.best){const o=[item.ko,...(item.alt||[])].flatMap(x=>x?expand(x,800,true):[]).find(x=>norm(x)===r.best);r.best=o?(/^\(?\p{Lu}/u.test(item.ko)?o[0].toUpperCase()+o.slice(1):o):LANG.pretty(r.best);if(o&&(r.kind==='accent'||r.kind==='spelling'))r.note=LANG.wnote(ans,o)||r.note;}return r;}
  function check0(item,ans){
   const raw=String(ans||'').trim();
   if(!raw||raw==='-')return {v:'bad',kind:'empty',best:expand(item.ko)[0]||'',note:''};

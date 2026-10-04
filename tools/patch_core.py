@@ -102,6 +102,14 @@ APP=[
  (":`<div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>Эталон: ",":`<div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>Эталон: ",1),
  ("<div class=\"gfix\"${rk?` data-say=\"${esc(fx)}\"`:''}>","<div class=\"gfix\"${rk?` data-say=\"${esc(x.say||fx)}\"`:''}>",1),
  (" <div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>${rk?'Ближайший эталон: '"," <div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>${rk?'Ближайший эталон: '",1),
+ # скрытие будущего: блоки слов есть и у грамматических шагов (слова, которые вводит тема)
+ ("const hidB=new Set(after.filter(s=>s.k==='w').flatMap(s=>(s.b||[]).map(String)));","const hidB=new Set(after.flatMap(s=>(s.b||[]).map(String)));",1),
+ # смешанные ГРЕ→РУС: без тем, у которых нет этого направления (nokr)
+ ("else if(st.kind==='mix')r=BANK.mix(CURG.id,GTOP.filter(g=>g.n<CURG.n).map(g=>g.id),u);}",
+  "else if(st.kind==='mix')r=BANK.mix(CURG.id,GTOP.filter(g=>g.n<CURG.n&&!(st.dir==='kr'&&g.nokr)).map(g=>g.id),u);}",1),
+ # заголовок блока из заданий разных тем — общий
+ ("((GBY[it[0].t]||{}).task_rk||'переведи на греческий'):((GBY[it[0].t]||{}).task_kr||'переведи на русский')",
+  "(new Set(it.map(x=>x.t)).size>1?'выполни задания':((GBY[it[0].t]||{}).task_rk||'переведи на греческий')):(new Set(it.map(x=>x.t)).size>1?'переведи на русский':((GBY[it[0].t]||{}).task_kr||'переведи на русский'))",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),
