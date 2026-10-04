@@ -712,7 +712,7 @@ function lesTheory(st){const g=CURG,p=st.p,k=PARTS.indexOf(p),nw=new Set(g['new'
  for(const s of ss)h+=gsec(esc(s.title),txt(s.body)+exL(s.ex));
  if(us.length)h+=gsec('Употребление',useL(us,nw));
  const qa=(L.qa[p.id]||[]),qk=GR.qa[p.id];
- h+=gsec('Вопрос по теории',qa.map(x=>`<div class="gqa"><div class="gqq">${esc(x.q)}</div>${x.a?`<div class="gwhy">${txt(x.a)}</div>`:x.err?`<div class="gnote">${esc(x.err)}</div>`:''}</div>`).join('')+
+ if(!OFF)h+=gsec('Вопрос по теории',qa.map(x=>`<div class="gqa"><div class="gqq">${esc(x.q)}</div>${x.a?`<div class="gwhy">${txt(x.a)}</div>`:x.err?`<div class="gnote">${esc(x.err)}</div>`:''}</div>`).join('')+
   (qk?`<p class="gnote">Отвечаю…</p>`:`<textarea id="gqin" rows="3" placeholder="Напиши вопрос сюда — например: почему здесь 도, а не 는?"></textarea><div class="tbtns">${btn('gask','Отправить вопрос')}</div>`));
  h+=`<p><button class="rel" data-g="${esc(g.id)}">${g.norev?'Весь практикум':'Вся тема '+g.n} целиком</button></p><div class="tbtns">${btn('lex','К упражнениям',1)}</div>`;return h;}
 async function lesAsk(){const L=LES(),st=LBY[L.stage],p=st.p,q=($('gqin').value||'').trim();if(!q||GR.qa[p.id])return;
@@ -938,7 +938,7 @@ function xStage(id){const A=ST.au,b=A.by[A.cur];b.stage=id;if(id==='sum'&&!A.don
 function xChips(){if(S.rtab==='n')return `<div class="dsit">`+XN.map(([k,n])=>`<button class="chip${ST.drsel.n.includes(k)?' on':''}" data-xs="n|${k}">${n}</button>`).join('')+'</div>';
  if(S.rtab==='c')return `<div class="dsit">`+XC.map(([k,n])=>`<button class="chip${ST.drsel.c.includes(k)?' on':''}" data-xs="c|${k}">${n}</button>`).join('')+'</div>';return '';}
 function auListHTML(){const A=ST.au,T=AUT();
- return `<div class="tmeta">Слова на слух · курс тем</div><p class="gp">Звучит слово — запиши по-гречески. Глаголы и 형용사 звучат в спрягаемой форме: разделы — настоящее, «Вся тема» — прошедшее, смешанные — любая форма. Тема пройдена, когда открыт «Итог».</p>`+
+ return `<div class="tmeta">Слова на слух · курс тем</div><p class="gp">Звучит слово — запиши по-гречески. ${LANG.code==='ko'?'Глаголы и 형용사 звучат в спрягаемой форме: разделы — настоящее, «Вся тема» — прошедшее, смешанные — любая форма. ':''}Тема пройдена, когда открыт «Итог».</p>`+
   T.map(t=>{const st=t.ws.map(id=>A.st[BY[id].ko]||[0,0]),ok=st.reduce((a,x)=>a+x[0],0),bd=st.reduce((a,x)=>a+x[1],0);
    return `<div class="al" data-xt="${t.id}"><div class="asp">${A.done.includes(t.id)?'✓ пройдена':'не пройдена'}${ok+bd?` · верно ${ok}, ошибок ${bd}`:''}</div><div class="bme">${esc(t.label)} <span class="mut" style="font-size:18px">· ${t.ws.length} слов</span></div></div>`;}).join('');}
 function auSumHTML(t){const A=ST.au,rows=t.ws.map(id=>[id,A.st[BY[id].ko]||[0,0]]),bad=rows.filter(r=>r[1][1]>0).sort((a,b)=>b[1][1]-a[1][1]);
