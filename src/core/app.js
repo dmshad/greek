@@ -268,7 +268,7 @@ function record(id,r){const s=ST.stats[id]||(ST.stats[id]=[0,0,0]);s[r==='ok'?0:
 const CURB=(()=>{const c=D.meta.currentBlock;return c==null?[]:(Array.isArray(c)?c:[c]);})();
 const CURW=CURB.map(b=>W.filter(w=>w.block===b)),CURS=new Set(CURW.flat().map(w=>w.id)),REG=W.filter(w=>!CURS.has(w.id));
 const STAGES=[...CURB.map((b,i)=>({id:'s'+i,i,label:'Раздел '+(i+1),kind:'sec',dir:'rk'})),
- ...(CURB.length?[{id:'all',label:'Вся тема',kind:'all',dir:'rk'},{id:'mixrk',label:'Смешанные РУС→ГРЕ',kind:'mix',dir:'rk'},{id:'mixkr',label:'Смешанные ГРЕ→РУС',kind:'mix',dir:'kr'}]:[])];
+ ...(CURB.length?(REG.length?[{id:'all',label:'Вся тема',kind:'all',dir:'rk'},{id:'mixrk',label:'Смешанные РУС→ГРЕ',kind:'mix',dir:'rk'},{id:'mixkr',label:'Смешанные ГРЕ→РУС',kind:'mix',dir:'kr'}]:[{id:'all',label:'Вся тема РУС→ГРЕ',kind:'all',dir:'rk'},{id:'allkr',label:'Вся тема ГРЕ→РУС',kind:'all',dir:'kr'}]):[])];
 const RSTG={id:'rev',label:'Повторение',kind:'rev',dir:'rk'};
 const STG=Object.fromEntries([...STAGES,RSTG].map(x=>[x.id,x])),FLOW=STAGES.map(x=>x.id),THEME=CURB.join(',');
 const RUC={};W.forEach(w=>{RUC[w.ru]=(RUC[w.ru]||0)+1;});
@@ -296,7 +296,7 @@ function dobor(n){const out=shuf(REG.filter(WK)).slice(0,n).map(w=>w.id);
  return out;}
 function chunk(a,k){const r=[];for(let i=0;i<a.length;i+=k)r.push(a.slice(i,i+k));return r;}
 function buildSeries(kind){
- if(kind==='all')return chunk(shuf([...CURS,...dobor(4)]),8);
+ if(kind==='all'){const a=shuf([...CURS,...dobor(4)]);return chunk(a,Math.ceil(a.length/Math.ceil(a.length/8)));}
  if(kind==='rev')return chunk(spread(pick(REG,100,new Set())),10);
  const cur=[...CURS],A=[...cur,...cur,...dobor(10)],B=spread(pick(REG,50,new Set(A))),bl=Array.from({length:10},()=>[]);
  for(const id of shuf(A)){let c=bl.filter(b=>b.length<5&&!b.includes(id));if(!c.length)c=bl.filter(b=>b.length<5);if(!c.length)break;
@@ -555,11 +555,11 @@ function newSeries(){const o=GS()||{},d=ST.grd;
  ST.grs[d]={id:Date.now(),kind:'rev',dir:d,plan:planSeries(d==='au'?GAU().sel:null),bi:0,bl:{},ans:{},res:{},lastW:o.lastW||[]};saveST();}
 
 /* --- Урок: этапы и сессии --- */
-const PARTS=CURG&&CURG.parts?CURG.parts:[];
+const PARTS=CURG&&CURG.parts?CURG.parts:[];const PREVG=CURG?GTOP.filter(g=>g.n<CURG.n&&(!OFF||BANK.has(g.id))).length:0;
 const LSTG=[...PARTS.map((p,k)=>({id:p.id,kind:'part',label:'Часть '+(k+1),size:5,dir:'rk',extra:1,p})),
  {id:'all',kind:'all',label:'Вся тема',size:8,dir:'rk',extra:1},
- {id:'mixrk',kind:'mix',label:'Смешанные РУС→ГРЕ',size:10,dir:'rk',extra:2},
- ...(CURG&&CURG.nokr?[]:[{id:'mixkr',kind:'mix',label:'Смешанные ГРЕ→РУС',size:10,dir:'kr',extra:2}]),
+ ...(PREVG?[{id:'mixrk',kind:'mix',label:'Смешанные РУС→ГРЕ',size:10,dir:'rk',extra:2}]:[]),
+ ...(CURG&&(CURG.nokr||!PREVG)?[]:[{id:'mixkr',kind:'mix',label:'Смешанные ГРЕ→РУС',size:10,dir:'kr',extra:2}]),
  {id:'end',kind:'end',label:'Итог'}];
 const LBY=Object.fromEntries(LSTG.map(x=>[x.id,x]));
 function LES(){if(!CURG||!PARTS.length)return null;if(!ST.les||ST.les.g!==CURG.id){ST.lesArc=ST.lesArc||{};if(ST.les&&ST.les.g)ST.lesArc[ST.les.g]=ST.les;ST.les=ST.lesArc[CURG.id]||{g:CURG.id,stage:PARTS[0].id,view:'th',by:{},qa:{},started:false,wp:0,cp:0};delete ST.lesArc[CURG.id];}
@@ -762,7 +762,7 @@ function lesHTML(){const L=LES();$('tdir').hidden=true;
  {const o=$('tst').querySelector('.on');if(o&&o.scrollIntoView)o.scrollIntoView({inline:'nearest',block:'nearest'});}
  const st=LBY[L.stage],s=lesS(L.stage);$('tcnt').textContent=s&&L.view==='ex'?'Блок '+(s.bi+1):'';
  if(!L.started)return `<div class="tmeta">${GL(CURG)}</div><div class="gtitle">${esc(CURG.title)}</div>${txt(CURG.meaning)}
-  <p class="gp">Этапы: ${PARTS.map((p,k)=>`часть ${k+1} «${esc(p.title)}»`).join(', ')} → вся тема → смешанные РУС→ГРЕ${CURG.nokr?'':' → ГРЕ→РУС'} → итог.</p>
+  <p class="gp">Этапы: ${PARTS.map((p,k)=>`часть ${k+1} «${esc(p.title)}»`).join(', ')} → вся тема${PREVG?' → смешанные РУС→ГРЕ'+(CURG.nokr?'':' → ГРЕ→РУС'):''} → итог.</p>
   <p class="gp mut">${OFF?'Автономный режим: упражнения — из банка, проверка — без Claude. «Почему?» и вопросы по теории недоступны.':'«Начать тему» ставит в очередь упражнения ко всем этапам. Готовые блоки сохраняются сразу; генерация идёт, пока страница открыта, и продолжается при следующем открытии.'}</p>
   <div class="tbtns">${btn('lstart','Начать тему',1)}</div>`;
  if(st.kind==='end')return lesSummary();

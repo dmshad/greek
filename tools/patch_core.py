@@ -79,6 +79,20 @@ APP=[
  ("function tabHi(){if(S.app!=='rev'&&(S.ttab==='n'||S.ttab==='c'))S.ttab='w';",
   "function tabHi(){if((S.app!=='rev'||LANG.noX)&&(S.ttab==='n'||S.ttab==='c'))S.ttab='w';if(LANG.noX&&(S.rtab==='n'||S.rtab==='c'))S.rtab='w';",1),
  ("x.hidden=S.app!=='rev'&&(x.dataset.v==='n'||x.dataset.v==='c')","x.hidden=(S.app!=='rev'||LANG.noX)&&(x.dataset.v==='n'||x.dataset.v==='c')",1),
+ # первая словарная тема (пройденных слов ещё нет): вместо «смешанных» — «вся тема» в обе стороны
+ ("...(CURB.length?[{id:'all',label:'Вся тема',kind:'all',dir:'rk'},{id:'mixrk',label:'Смешанные РУС→ГРЕ',kind:'mix',dir:'rk'},{id:'mixkr',label:'Смешанные ГРЕ→РУС',kind:'mix',dir:'kr'}]:[])",
+  "...(CURB.length?(REG.length?[{id:'all',label:'Вся тема',kind:'all',dir:'rk'},{id:'mixrk',label:'Смешанные РУС→ГРЕ',kind:'mix',dir:'rk'},{id:'mixkr',label:'Смешанные ГРЕ→РУС',kind:'mix',dir:'kr'}]:[{id:'all',label:'Вся тема РУС→ГРЕ',kind:'all',dir:'rk'},{id:'allkr',label:'Вся тема ГРЕ→РУС',kind:'all',dir:'kr'}]):[])",1),
+ # «вся тема»: блоки поровну, не больше 8 (20 слов → 7+7+6, а не 8+8+4)
+ ("if(kind==='all')return chunk(shuf([...CURS,...dobor(4)]),8);",
+  "if(kind==='all'){const a=shuf([...CURS,...dobor(4)]);return chunk(a,Math.ceil(a.length/Math.ceil(a.length/8)));}",1),
+ # первая грамматическая тема (нет прошлых тем в банке): без «смешанных» — они повторяли бы «всю тему»
+ ("const PARTS=CURG&&CURG.parts?CURG.parts:[];",
+  "const PARTS=CURG&&CURG.parts?CURG.parts:[];const PREVG=CURG?GTOP.filter(g=>g.n<CURG.n&&(!OFF||BANK.has(g.id))).length:0;",1),
+ ("{id:'mixrk',kind:'mix',label:'Смешанные РУС→ГРЕ',size:10,dir:'rk',extra:2},",
+  "...(PREVG?[{id:'mixrk',kind:'mix',label:'Смешанные РУС→ГРЕ',size:10,dir:'rk',extra:2}]:[]),",1),
+ ("...(CURG&&CURG.nokr?[]:[{id:'mixkr'","...(CURG&&(CURG.nokr||!PREVG)?[]:[{id:'mixkr'",1),
+ ("→ вся тема → смешанные РУС→ГРЕ${CURG.nokr?'':' → ГРЕ→РУС'} → итог.</p>",
+  "→ вся тема${PREVG?' → смешанные РУС→ГРЕ'+(CURG.nokr?'':' → ГРЕ→РУС'):''} → итог.</p>",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),
