@@ -21,11 +21,15 @@ const CHK=(()=>{
  function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
  function diff(a,b){return {a,b};}
+ // парадигмы глаголов для пояснения «не та форма» (пополняется с темами)
+ const PARAD=[{'είμαι':'я','είσαι':'ты','είναι':'он, она, оно / они','είμαστε':'мы','είστε':'вы','είσαστε':'вы'}].map(P=>Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v])));
  function setLex(D){}
  const canon=s=>s;
  // item: {ko, alt[], traps[{a,why}]}; ответ пользователя
  // эталон для показа — в исходном виде (регистр, ς, пунктуация), если совпадает с найденным
- function check(item,ans){const r=check0(item,ans);if(r.best){const o=[item.ko,...(item.alt||[])].flatMap(x=>x?expand(x,800,true):[]).find(x=>norm(x)===r.best);r.best=o?(/^\(?\p{Lu}/u.test(item.ko)?o[0].toUpperCase()+o.slice(1):o):LANG.pretty(r.best);if(o&&(r.kind==='accent'||r.kind==='spelling'))r.note=LANG.wnote(ans,o)||r.note;}return r;}
+ function check(item,ans){const r=check0(item,ans);if(r.best){const o=[item.ko,...(item.alt||[])].flatMap(x=>x?expand(x,800,true):[]).find(x=>norm(x)===r.best);r.best=o?(/^\(?\p{Lu}/u.test(item.ko)?o[0].toUpperCase()+o.slice(1):o):LANG.pretty(r.best);if(o&&(r.kind==='accent'||r.kind==='spelling'))r.note=LANG.wnote(ans,o)||r.note;
+  // эталон для показа — с κι, если ученик написал κι (это не отличие)
+  const raw=String(ans||'');if(/(^|\s)κι(?=\s|$)/i.test(raw)&&!/(^|\s)και(?=\s|$)/i.test(raw))r.best=r.best.replace(/(^|\s)(κ)αι(?=\s)/gi,'$1$2ι');}return r;}
  function check0(item,ans){
   const raw=String(ans||'').trim();
   if(!raw||raw==='-')return {v:'bad',kind:'empty',best:expand(item.ko)[0]||'',note:''};
@@ -50,6 +54,10 @@ const CHK=(()=>{
    return {v:'bad',kind:'trap',best,note:tr.why};}
   // ударение, односложные, «звучит так же — пишется иначе»
   for(const x of V){const n=LANG.wnote(a,x);if(n)return {v:'bad',kind:/дарени|односложн|Разные слова/.test(n)?'accent':'spelling',best:x,note:n};}
+  // одно слово — другая форма того же глагола (είμαι/είσαι/…): ошибка с пояснением
+  {const aw=a.split(' ');for(const x of V){const xw=x.split(' ');if(xw.length!==aw.length)continue;
+    const d=xw.map((w,i)=>w===aw[i]?-1:i).filter(i=>i>=0);if(d.length!==1)continue;const i=d[0];
+    for(const P of PARAD){if(P[aw[i]]&&P[xw[i]])return {v:'bad',kind:'form',best:x,note:'Не та форма: '+P[xw[i]]+' — '+LANG.pretty(xw[i])+' (у тебя '+LANG.pretty(aw[i])+' — '+P[aw[i]]+').'};}}}
   let best=V[0],bd=1e9;for(const x of V){const d=lev(nsp(x),an);if(d<bd){bd=d;best=x;}}
   // ловушка с опечаткой: ошибка по смыслу важнее
   for(const tr of item.traps||[])for(const x of expand(tr.a))if(lev(nsp(x),an)<=1&&nsp(x).length>=4)return {v:'bad',kind:'trap',best,note:tr.why+' Плюс ошибка в написании — сравни с эталоном.'};
