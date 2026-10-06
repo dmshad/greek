@@ -351,7 +351,7 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0;
  $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
  const ta=$('ta');
- if(!rv&&st.kind==='sec'&&s.dir==='rk'&&!s.seen&&s.bn===1&&s.pos===0&&!s.rep&&!Object.keys(s.res||{}).length){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=introHTML(s,st);ta.blur();hh();return;}
+ if(!rv&&st.kind==='sec'&&(s.seen===0||(s.seen==null&&s.bn===1&&s.pos===0&&!Object.keys(s.res).length))){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=introHTML(s,st);ta.blur();$('tcnt').textContent='';hh();return;}
  if(s.ph==='sum'){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=sumHTML(s,st);ta.blur();hh();return;}
  $('tcard').hidden=false;$('tsum').hidden=true;$('tsum').innerHTML='';
  const it=s.q[s.pos],w=BY[it.id],c=s.cur;
@@ -371,6 +371,9 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
    $('tbtns').innerHTML=btn('kok','Знал',1)+btn('kno','Не знал');}}
  hh();}
 const SYSN={sino:'한자어 — китайское',native:'고유어 — исконное'};
+function wIntroHTML(st){return `<div class="trn"><div class="tmeta">${esc(st.label)} · слова</div><p class="gp">Нажми на слово — прозвучит. Посмотри и послушай все, потом — упражнения.</p>`+
+ CURW[st.i].map(w=>`<div class="lw wli" data-say="${esc(w.ko)}"><span class="lwk">${esc(w.ko)}</span> <span class="tr">[${esc(w.tr)}]</span> <span class="wsp">🔊</span><div class="ru">${esc(w.ru)}</div></div>`).join('')+
+ `<div class="tbtns">${btn('wgo','К упражнениям',1)}</div></div>`;}
 function hintRK(w){return w.cat==='num'&&w.sub?SYSN[w.sub]:(RUC[w.ru]>1?(SUBN[w.sub]||CATN[w.cat]):'');}
 const otherSys=(w,v)=>W.find(x=>x!==w&&x.ru===w.ru&&kn(x.ko)===kn(v));
 const ruT=r=>new Set(r.replace(/\([^)]*\)/g,'').split(/[;,]/).map(s=>s.trim().toLowerCase()).filter(Boolean));
@@ -380,7 +383,7 @@ function check(){const s=SS(),c=s.cur,w=BY[s.q[s.pos].id],v=$('ta').value;if(c.s
  const y=otherSyn(w,v);if(y){$('tout').innerHTML=`<div class="tres bad">${esc(y.ko)} — это «${esc(y.ru)}». Загадано другое слово — «${esc(w.ru)}».</div>`;$('ta').select();return;}
  c.v=v;c.ok=[w.ko,...(w.alt||[])].some(x=>kn(v)===kn(x))?1:0;c.r=c.ok?'ok':'bad';c.note=c.ok?'':(LANG.wnote?LANG.wnote(v,w.ko):'');c.dk=0;c.st='shown';saveST();updT();}
 function act(a){const s=SS(),c=s.cur;
- if(a==='wstart'){s.seen=1;saveST();scrollTo(0,0);return updT(true);}
+ if(a==='wgo'||a==='wstart'){s.seen=1;saveST();scrollTo(0,0);return updT(true);}
  if(a==='chk')return check();
  if(a==='next'){adv(s,c.r);return updT(true);}
  if(a==='kok'||a==='kno'){adv(s,a==='kok'?'ok':'bad');return updT();}
@@ -417,8 +420,9 @@ $('list').addEventListener('click',e=>{const b=e.target.closest('#tsum [data-wc]
  try{navigator.clipboard.writeText(t.value).then(()=>{b.textContent='Скопировано';},()=>{b.textContent='Выдели и скопируй вручную';});}catch(x){b.textContent='Выдели и скопируй вручную';}});
 $('tdir').onclick=()=>{if(!TREADY)return;if(S.app==='rev'&&(S.rtab==='n'||S.rtab==='c'))return xDir();if(S.app==='rev'&&S.rtab==='g')return grDir();if(S.app==='rev'){ST.rd=ST.rd==='rk'?'kr':ST.rd==='kr'?'au':'rk';saveST();$('list').innerHTML='';scrollTo(0,0);return render();}const s=SS(),n=sessFor(s.stage,s.dir==='rk'?'kr':'rk');if(S.app==='rev')ST.rsess=n;else ST.sess.by[s.stage]=n;saveST();updT(true);};
 function openList(){const s=SS(),st=STG[s.stage],L=st.kind==='sec'?CURW[st.i]:CURW.flat();
+ if(st.kind==='sec'&&S.app!=='rev'){s.seen=0;saveST();scrollTo(0,0);return updT();}
  showSheet(`<div class="top"><div class="gtitle">${st.kind==='sec'?esc(st.label):'Слова темы'}</div><button class="x" id="cx" aria-label="Закрыть">×</button></div>`+
-  L.map(w=>`<div class="lw">${esc(w.ru)} — <span class="lwk">${esc(w.ko)}</span></div>`).join(''));}
+  L.map(w=>`<div class="lw" data-say="${esc(w.ko)}">${esc(w.ru)} — <span class="lwk">${esc(w.ko)}</span> <span class="tr">[${esc(w.tr)}]</span></div>`).join(''));}
 $('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};
 function renderT(){tabHi();if(xMode())return renderX();if(exMode())return renderEX();$('tdir').hidden=false;$('jump').innerHTML='';
  if(!TREADY){$('list').innerHTML='<div class="empty">Загрузка…</div>';hh();return;}
@@ -769,7 +773,7 @@ function lesHTML(){const L=LES();$('tdir').hidden=true;
  if(st.kind==='part'&&L.view==='th')return lesTheory(st);
  const fi=LSTG.indexOf(st),nx=LSTG[fi+1];
  let f='';if(s.res[s.bi]){f=`<div class="tbtns">${btn('gnext','Ещё блок')}${nx?btn('lnext','Дальше: '+nx.label,1):''}</div>`;}
- const top=st.kind==='part'?`<div class="tbtns ltop">${btn('lth','Теория части')}</div>`:'';
+ const top=st.kind==='part'?`<div class="tbtns ltop">${btn('lth','Теория части')}</div>`:`<div class="tbtns ltop"><button class="tb" data-g="${esc(CURG.id)}">Теория темы</button></div>`;
  return top+blockHTML(s,(st.kind==='part'?st.label+' · ':st.label+' · ')+'блок '+(s.bi+1),f);}
 function lesGo(id,view){const L=LES();exSave();L.stage=id;L.view=view||(LBY[id].kind==='part'?'th':'ex');lesS(id);saveST();scrollTo(0,0);exUpd();}
 function lesPump(){const L=LES();if(!L||!L.started||GR.qrun)return;
@@ -964,12 +968,12 @@ function xSumHTML(s){const its=s.q.filter(x=>!x.rep),ok=its.filter(x=>s.res[x.i]
   h+=`<p class="tcov">${s.kind==='sec'?'Раздел пройден':'Этап пройден'}.</p><div class="tbtns">${btn('nb','Ещё раз')}${i<sts.length-1?btn('nxst','Дальше: '+sts[i+1].label,1):''}</div>`;}
  else h+=`<div class="tbtns">${btn('nb','Следующий блок',1)}</div>`;return h;}
 function xHTML(){XS();let h='';
- if(S.rtab==='w'){const A=ST.au;h+=rateHTML();if(!A.cur||!auTh(A.cur))return h+auListHTML();
+ if(S.rtab==='w'){const A=ST.au;if(!A.cur||!auTh(A.cur))return h+auListHTML();
   const t=auTh(A.cur),b=A.by[A.cur]||{},sts=auStages(t);
   h+=`<div class="thd"><div class="tmeta">${esc(t.label)}</div><button class="chip" data-x="themes">Темы</button></div><div class="dsit" style="margin-top:8px">`+
    sts.map(x=>`<button class="chip${x.id===b.stage?' on':''}" data-xg="${x.id}">${x.label}</button>`).join('')+'</div>';
   const s=xSess();if(s.sum)return h+auSumHTML(t);return h+(s.ph==='sum'?xSumHTML(s):xItemHTML(s));}
- const s=xSess();h+=xChips()+(ST.nd==='nau'&&S.rtab==='n'?rateHTML():'');return h+(s.ph==='sum'?xSumHTML(s):xItemHTML(s));}
+ const s=xSess();h+=xChips();return h+(s.ph==='sum'?xSumHTML(s):xItemHTML(s));}
 function xUpd(focus){if(!xMode()||!$('xcard'))return;try{xUpd0(focus);}catch(e){$('xcard').innerHTML=`<div class="tres bad">Сбой: ${esc(e&&e.message||String(e))}</div><div class="tbtns">${btn('xreset','Сбросить этот режим',1)}</div>`;hh();}}
 function xUpd0(focus){if(S.app==='rev')dsegUpd();const s=S.rtab==='w'?null:xSess();
  $('tdir').textContent=S.rtab==='w'?'🔊 НА СЛУХ':XDIR[xKey()];$('tcnt').textContent=s?'Блок '+s.bn:'';
@@ -994,13 +998,13 @@ $('list').addEventListener('input',e=>{if(e.target.id!=='xa')return;const s=xSes
 const AULEAD='ДИКТАНТ НА СЛУХ: ученик слышит корейскую фразу (озвучка) и записывает её хангылем; ru — перевод для справки. Каждая фраза — одна короткая реплика, 3–8 слов, без двух реплик через тире и без пояснений в скобках. alt — другие верные записи той же фразы, если они возможны.';
 function GAU(){if(!ST.grau||typeof ST.grau!=='object')ST.grau={};if(!Array.isArray(ST.grau.sel)||!ST.grau.sel.length)ST.grau.sel=GTOP.slice(0,3).map(g=>g.n);return ST.grau;}
 function auRevHTML(s){const A=GAU();if(s&&!Array.isArray(s.plan)){delete ST.grs.au;s=null;}
- if(!s)return rateHTML()+`<div class="tmeta">Грамматика на слух · диктант</div><p class="gp">Звучит фраза — запиши её хангылем. Серия 10 блоков по 10 фраз по выбранным темам. Фразы составляет Claude, проверка — сразу, без запроса.</p>`+
+ if(!s)return `<div class="tmeta">Грамматика на слух · диктант</div><p class="gp">Звучит фраза — запиши её хангылем. Серия 10 блоков по 10 фраз по выбранным темам. Фразы составляет Claude, проверка — сразу, без запроса.</p>`+
   GTOP.map(g=>`<label class="gp" style="display:flex;gap:10px;align-items:center;font-size:20px"><input type="checkbox" data-gau="${g.n}"${A.sel.includes(g.n)?' checked':''} style="width:22px;height:22px;flex:none"> ${esc(GL(g))} · ${esc(g.title)}</label>`).join('')+
   `<div class="tbtns">${btn('gstart','Начать серию',1)}</div>`;
  const i=s.bi,last=i>=s.plan.length-1;let f='';
  if(s.res[i]){const nx=!last&&!s.bl[i+1];f+=`<div class="tbtns">${btn('gnext',last?'Новая серия':(nx&&GR.gen[s.id+'|'+(i+1)]?'Следующий блок · готовится':'Следующий блок'),1)}</div>`;}
  f+=`<div class="tbtns">${btn('gaureset','Сменить темы')}</div>`;
- return rateHTML()+`<p class="hint">Темы: ${A.sel.join(', ')}</p>`+blockHTML(s,'Блок '+(i+1),f);}
+ return `<p class="hint">Темы: ${A.sel.join(', ')}</p>`+blockHTML(s,'Блок '+(i+1),f);}
 function auChk(s,i){const a=s.ans[i]||[];
  s.res[i]=s.bl[i].map((x,k)=>{const u=(a[k]||'').trim(),refs=[x.ko,...(x.alt||[])].flatMap(r=>/[()\[\]|]/.test(r)?CHK.expand(r):[r]);
   let v='bad';if(u&&u!=='-'){if(refs.some(r=>dn(r)===dn(u)))v='ok';else if(refs.some(r=>kn(r)===kn(u)))v='typo';}
@@ -1038,6 +1042,14 @@ const DTIER='default';
 const DG={tick:null,ul:0};
 function DS(){const d=ST.dlg||(ST.dlg={});d.sit=d.sit||'any';if(d.tab!=='vo')d.tab='tr';if(d.auto==null)d.auto=1;if(d.talk)delete d.talk;if(d.au)delete d.au;return d;}
 const rate=()=>+ST.rate||0.8;
+const SAMPLE={ko:'안녕하세요. 만나서 반가워요.',el:'Γεια σας. Χαίρω πολύ.'};
+function openSet(){showSheet(`<div class="top"><div class="gtitle">Настройки</div><button class="x" id="cx" aria-label="Закрыть">×</button></div>`+
+ `<h3>Скорость речи</h3><p class="mut">Одна для всех разделов: слова, грамматика, «На слух», диалоги.</p>`+
+ `<div class="drate"><span>Скорость <b id="srv">${rate().toFixed(2)}</b></span><input type="range" id="srng" min="0.1" max="1.2" step="0.05" value="${rate()}"></div>`+
+ `<div class="tbtns"><button class="tb" data-say="${esc(SAMPLE[LANG.code]||'')}">Прослушать пример</button></div>`+
+ `<p class="mut">Голос — тот, что выбран для языка в настройках телефона.</p>`);}
+$('card').addEventListener('input',e=>{if(e.target.id!=='srng')return;ST.rate=+e.target.value;const v=$('srv');if(v)v.textContent=rate().toFixed(2);});
+$('card').addEventListener('change',e=>{if(e.target.id==='srng')saveST();});
 function unlockTTS(){try{if(window.speechSynthesis&&!DG.ul){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);DG.ul=1;}}catch(e){}}
 function dSitPick(){const d=DS();if(d.sit!=='any')return d.sit;const ks=DSIT.map(x=>x[0]).filter(k=>k!=='any'&&k!==d.lastSit);const k=ks[Math.floor(Math.random()*ks.length)];d.lastSit=k;return k;}
 function dUnflag(){const u=new Set();if(CURG&&CURG.parts)for(const p of CURG.parts)for(const f of (p.unflag||[]))u.add(f);return u;}
@@ -1140,7 +1152,6 @@ function trFlip(k){const c=TRS().cur,r=c&&c.res[k];if(!r||r.v==='skip'||r.v==='s
  saveST();trUpd();}
 function trHTML(){const d=DS(),m=dm(),VO=m==='vo',TRG=TRGM[m],T=TRS(m),c=T.cur;let h=sitHTML();
  h+=`<div class="tbtns ltop"><button class="tb" data-d="rnew">Новый диалог</button>`+(VO?'':`<button class="tb${d.auto?' on g':''}" data-d="auto">🔊 Авто${d.auto?': вкл':': выкл'}</button>`)+`</div>`;
- if(VO)h+=`<div class="drate"><span>Скорость <b id="drv">${rate().toFixed(2)}</b></span><input type="range" id="drng" min="0.1" max="1.2" step="0.05" value="${rate()}"></div>`;
  if(!c){if((T.want||TRG.gen)&&!TRG.err)h+=`<div class="dsc">Готовлю диалог… <span id="dtk" data-t0="${TRG.gen||Date.now()}">${sec2(TRG.gen||Date.now())}</span></div>`;
   else h+=`<div class="dsc">${VO?'Живой разговор: реплики собеседника только слышишь (кнопка «Слушать», сколько угодно раз) и пишешь перевод на русский; свои реплики получаешь по-русски и переводишь на греческий. Текст реплики собеседника открывается после ответа.':'Переписка: реплики собеседника видишь текстом и переводишь с греческого на русский, свои — с русского на греческий.'} ${OFF?'Свои реплики проверяются автоматически, реплики собеседника — сам, по эталону.':'Каждый перевод проверяется.'} «Не знаю» или «-» — показать эталон.</div><div class="tbtns"><button class="tb pri" data-d="rnew">Начать</button></div>`;
   if(TRG.err)h+=`<div class="dsc" style="color:var(--weak)">${esc(TRG.err)}</div><div class="tbtns"><button class="tb" data-d="rretry">Повторить</button></div>`;
@@ -1207,7 +1218,7 @@ function setApp(a){if(S.app==='dlg'&&a!=='dlg')auStop();S.app=a;S.q='';$('q').va
  $('q').placeholder=a==='gram'?'είμαι, артикль, ударение…':'Поиск: μητέρα, мать, митэра';
  render();scrollTo(0,0);}
 $('mb').onclick=e=>{e.stopPropagation();$('mm').hidden=!$('mm').hidden;};
-$('mm').onclick=e=>{const b=e.target.closest('button[data-m]');if(!b)return;$('mm').hidden=true;setApp(b.dataset.m);};
+$('mm').onclick=e=>{if(e.target.closest('#setb')){$('mm').hidden=true;return openSet();}const b=e.target.closest('button[data-m]');if(!b)return;$('mm').hidden=true;setApp(b.dataset.m);};
 document.addEventListener('click',e=>{if(!e.target.closest('#mm'))$('mm').hidden=true;});
 /* ===== Курс: экран ===== */
 function reloadApp(){try{location.reload();}catch(e){}setTimeout(()=>{PGS.msg='Перезапусти приложение, чтобы изменения применились.';render();},1500);}
