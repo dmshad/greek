@@ -31,8 +31,6 @@ APP=[
  # алфавит: сортировка и указатель
  ("[...L].sort((a,b)=>a.ko.localeCompare(b.ko,'ko'))","[...L].sort((a,b)=>(LANG.skey?LANG.skey(a.ko):a.ko).localeCompare(LANG.skey?LANG.skey(b.ko):b.ko,LANG.code))",1),
  ("function ini(s){","function ini(s){if(LANG.ini)return LANG.ini(s);",1),
- # голос озвучки
- ("/^ko/i.test(v.lang)","new RegExp('^'+LANG.code,'i').test(v.lang)",1),
  # подписи
  ("['adj','형용사']","['adj','Прилагательные']",1),
  ("КОР","ГРЕ",19),
