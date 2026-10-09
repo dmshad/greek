@@ -230,8 +230,9 @@ function pruneST(){try{
  if(ST.lesArc&&typeof COURSE==='object'&&COURSE.on){const keep=new Set([COURSE.cur,COURSE.view].filter(Boolean));for(const g of Object.keys(ST.lesArc))if(!keep.has(g))delete ST.lesArc[g];}
  const S=Object.values((ST.les&&ST.les.by)||{});for(const L of Object.values(ST.lesArc||{}))S.push(...Object.values((L&&L.by)||{}));
  for(const s of S){if(!s||!s.bl||typeof s.bi!=='number')continue;
-  for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]&&!s.res[i].some(r=>r&&r.v==='bad')){delete s.bl[i];if(s.ans)delete s.ans[i];
-   s.res[i]=s.res[i].map(r=>r&&typeof r==='object'?{v:r.v,e:r.e||'',man:r.man||0}:r);}}}
+  for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]){const B=s.bl[i]||[],A=(s.ans&&s.ans[i])||[];delete s.bl[i];if(s.ans)delete s.ans[i];
+   s.res[i]=s.res[i].map((r,k)=>{if(!r||typeof r!=='object')return r;const o={v:r.v,e:r.e||'',man:r.man||0};
+    if(r.v==='bad'){const x=B[k]||r.x;if(x)o.x={t:x.t,u:x.u,ru:x.ru,ko:x.ko};o.a=String(A[k]!=null?A[k]:(r.a||'')).trim();if(r.fix)o.fix=r.fix;if(r.note)o.note=r.note;}return o;});}}}
  if(ST.lesArc&&!Object.keys(ST.lesArc).length)delete ST.lesArc;
 }catch(e){}}
 function saveST(){pruneST();ST.upd=Date.now();const snap=JSON.parse(JSON.stringify(ST));
@@ -339,10 +340,6 @@ function sumHTML(s,st){const ids=s.q.filter(x=>!x.rep).map(x=>x.id),ok=ids.filte
  if(end)h+=`<p class="tcov">${st.kind==='all'?'Этап пройден':'Серия завершена'}. Охват: ${s.cov} из ${W.length} слов.</p><div class="tbtns">${btn('ns',st.kind==='all'?'Ещё раз':'Новая серия',1)}</div>`;
  else h+=`<div class="tbtns">${btn('nb','Следующий блок',1)}</div>`;
  return h+'</div>';}
-function introHTML(s,st){const L=CURW[st.i]||[];return `<div class="trn"><div class="tmeta">${esc(st.label)} · новые слова</div><p class="gp">Посмотри и послушай слова раздела — нажми на слово или пример. Потом проверка: перевод с русского.</p>`+
- L.map(w=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><div><span class="ko" data-say="${esc(w.ko)}">${esc(w.ko)}</span> <span class="tr">[${esc(w.tr)}]</span></div><div class="ru">${esc(w.ru)}</div>`+
- (w.extra?`<div class="mut" style="font-size:15px">${esc(w.extra)}</div>`:'')+(w.ex||[]).slice(0,1).map(e=>`<div class="mut" style="font-size:16px;margin-top:3px"><span data-say="${esc(e.ko)}">${esc(e.ko)}</span> — ${esc(e.ru)}</div>`).join('')+'</div>').join('')+
- `<div class="tbtns">${btn('wstart','Начать',1)}</div></div>`;}
 function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  $('tst').hidden=rv;$('tnx').hidden=rv;$('tls').hidden=rv;
  $('tst').innerHTML=STAGES.map(x=>`<button class="chip${x.id===s.stage?' on':''}" data-st="${x.id}">${x.label}</button>`).join('')+(rv?'':`<button class="chip" data-ws="1">Итог темы</button>`);
@@ -351,7 +348,7 @@ function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
  const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0;
  $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
  const ta=$('ta');
- if(!rv&&st.kind==='sec'&&(s.seen===0||(s.seen==null&&s.bn===1&&s.pos===0&&!Object.keys(s.res).length))){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=introHTML(s,st);ta.blur();$('tcnt').textContent='';hh();return;}
+ if(!rv&&st.kind==='sec'&&(s.seen===0||(s.seen==null&&s.bn===1&&s.pos===0&&!Object.keys(s.res).length))){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=wIntroHTML(st);ta.blur();$('tcnt').textContent='';hh();return;}
  if(s.ph==='sum'){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=sumHTML(s,st);ta.blur();hh();return;}
  $('tcard').hidden=false;$('tsum').hidden=true;$('tsum').innerHTML='';
  const it=s.q[s.pos],w=BY[it.id],c=s.cur;
@@ -383,7 +380,7 @@ function check(){const s=SS(),c=s.cur,w=BY[s.q[s.pos].id],v=$('ta').value;if(c.s
  const y=otherSyn(w,v);if(y){$('tout').innerHTML=`<div class="tres bad">${esc(y.ko)} — это «${esc(y.ru)}». Загадано другое слово — «${esc(w.ru)}».</div>`;$('ta').select();return;}
  c.v=v;c.ok=[w.ko,...(w.alt||[])].some(x=>kn(v)===kn(x))?1:0;c.r=c.ok?'ok':'bad';c.note=c.ok?'':(LANG.wnote?LANG.wnote(v,w.ko):'');c.dk=0;c.st='shown';saveST();updT();}
 function act(a){const s=SS(),c=s.cur;
- if(a==='wgo'||a==='wstart'){s.seen=1;saveST();scrollTo(0,0);return updT(true);}
+ if(a==='wgo'){s.seen=1;saveST();scrollTo(0,0);return updT(true);}
  if(a==='chk')return check();
  if(a==='next'){adv(s,c.r);return updT(true);}
  if(a==='kok'||a==='kno'){adv(s,a==='kok'?'ok':'bad');return updT();}
@@ -627,7 +624,7 @@ function exSelf(k,v){const s=EXA();if(!s||!s.res[s.bi])return;const r=s.res[s.bi
  if(r.dsp&&s.dir!=='kr')(ST.disp=ST.disp||[]).push({ts:Date.now(),t:x.t,u:x.u||'',bid:x.bid||'',ru:x.ru,ko:x.ko,a:((s.ans[s.bi]||[])[k]||'').trim(),v});
  saveST();exUpd();}
 function ruH(t){return esc(t).replace(/\((?:[^()]|\([^()]*\))*\)/g,m=>`<span class="ctx">${m}</span>`);}
-// ГРЕ→РУС: ситуация из начала русской фразы — «(Просишь друга)» — видна и над фразой
+// ГРЕ→РУС: ситуация из начала русской фразы — «(Просишь друга)» — видна и над корейской
 function koH(x){const m=String(x.ru||'').match(/^\s*(\([^()]*\))/);return (m?`<span class="ctx">${esc(m[1])}</span> `:'')+esc(x.ko);}
 function unkHTML(s,i,k,x,r,u,rk){const ref=rk?(r.fix||x.ko):x.ru;
  return `<div class="gi"><div class="gq sm${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):koH(x)}</div>
@@ -744,9 +741,10 @@ function courseNextHTML(){if(typeof COURSE!=='object'||!COURSE.on||COURSE.view)r
 document.addEventListener('click',e=>{const b=e.target.closest('[data-cnext]');if(!b)return;e.preventDefault();e.stopPropagation();
  if(!CNX){CNX=1;b.textContent='Точно? Нажми ещё раз';b.classList.remove('pri');b.classList.add('warn');setTimeout(()=>{if(CNX){CNX=0;if(b.isConnected){b.textContent='Тема пройдена — открыть следующую';b.classList.remove('warn');b.classList.add('pri');}}},4000);return;}
  CNX=0;const nx=COURSE.steps.slice(COURSE.idx+1).find(x=>COURSE.loaded(x));if(!nx)return;COURSE.setView(null);COURSE.set(nx.id);reloadApp();},true);
-function lesSummary(){const L=LES(),rows=[],bad=[];
+function lesSummary(){try{return lesSummary0();}catch(e){return `<div class="tmeta">${GL(CURG)} · итог</div><div class="gtitle">${esc(CURG.title)}</div><p class="gp mut">Сводку ошибок собрать не удалось.</p>${courseNextHTML()}`;}}
+function lesSummary0(){const L=LES(),rows=[],bad=[];
  for(const st of LSTG){if(st.kind==='end')continue;const s=L.by[st.id];if(!s)continue;let n=0,ok=0,tot=0;
-  for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:(s.bl[i]&&s.bl[i][k])||{ru:'(текст задания не сохранён)',ko:'—',t:'',u:''},r,a:((s.ans[i]||[])[k]||'').trim(),s});});}
+  for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:((s.bl||{})[i]||[])[k]||r.x||{},r,a:(((s.ans||{})[i]||[])[k]||r.a||'').trim(),s});});}
   if(n)rows.push(`${st.label}: ${n} бл., ${ok}/${tot}`);}
  const grp=(f)=>{const m={};bad.forEach(b=>{const k=f(b);if(!k)return;(m[k]=m[k]||{n:0,bl:new Set()}).n++;m[k].bl.add(b.st.id+b.i);});return m;};
  const byE=grp(b=>EN[b.r.e]||b.r.e||'другое'),byU=grp(b=>b.x.t===CURG.id&&b.x.u?b.x.u:'');
@@ -757,7 +755,7 @@ function lesSummary(){const L=LES(),rows=[],bad=[];
 Этапы: ${rows.join('; ')||'—'}
 Ошибки по типам: ${Object.entries(byE).map(([k,v])=>`${k} — ${v.n}`).join('; ')||'нет'}
 Ошибки:
-${bad.map(b=>`- [${b.st.label}] ${b.s.dir==='rk'?b.x.ru:b.x.ko} → ${b.a||'—'} | верно: ${b.r.fix||(b.s.dir==='rk'?b.x.ko:b.x.ru)}${b.r.note?' | '+b.r.note:''}`).join('\n')||'—'}`;
+${bad.map(b=>`- [${b.st.label}] ${(b.s.dir==='rk'?b.x.ru:b.x.ko)||'(текст не сохранён)'} → ${b.a||'—'} | верно: ${b.r.fix||(b.s.dir==='rk'?b.x.ko:b.x.ru)||'—'}${b.r.note?' | '+b.r.note:''}`).join('\n')||'—'}`;
  return `<div class="tmeta">${GL(CURG)} · итог</div><div class="gtitle">${esc(CURG.title)}</div>
  <p class="gp">Посмотри итог и ошибки. Чувствуешь себя уверенно — открывай следующую тему; если нет — вернись к этапам, где были ошибки.</p>
  <textarea id="gsum" readonly rows="12">${esc(t)}</textarea>${courseNextHTML()}<div class="tbtns">${btn('gcopy','Скопировать',0)}</div>`;}

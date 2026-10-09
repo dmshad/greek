@@ -44,3 +44,23 @@ def names(ru):
     for r,g in NAMES.items():
         ru=re.sub(r'\b'+r+r'\b',f'{r} ({g})',ru,count=1)
     return ru
+
+# --- ловушки «лишний артикль» у существительного-сказуемого (общий генератор) ---
+import re as _re
+def art_traps(ko,pred,why):
+    """pred: {слово: артикль}; why: шаблон пояснения с {w}. Для каждого слова из pred без артикля перед ним —
+    вариант ответа с артиклем (+ вариант, где артикль у всех сразу)."""
+    def spots(t):
+        r=[]
+        for n,a in pred.items():
+            for m in _re.finditer(r'\b'+_re.escape(n)+r'\b',t,_re.I):
+                prev=t[:m.start()].rstrip().split(' ')[-1].lower() if t[:m.start()].strip() else ''
+                if prev not in ('ο','η','το','οι','τα','(ο)','(η)'): r.append((m.start(),m.end(),n,a))
+        return sorted(r)
+    S=spots(ko); out=[]
+    for st,en,n,a in S: out.append((ko[:st]+f'{a} {n}'+ko[en:],why.format(w=n)))
+    if len(S)>1:
+        t=ko
+        for st,en,n,a in reversed(S): t=t[:st]+f'{a} {n}'+t[en:]
+        out.append((t,why.format(w=', '.join(n for _,_,n,_ in S))))
+    return out

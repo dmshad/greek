@@ -57,18 +57,6 @@ APP=[
   "function planSeries(sel){const T=GTOP.filter(g=>gMod(g).length&&!(g.nokr&&ST.grd==='kr')&&",1),
  ("if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",
   "if(s&&!s.plan.length)return '<p class=\"gp\">Для этого направления пока нет пройденных тем. Переключи направление кнопкой выше.</p>';if(!s)return `<div class=\"tmeta\">Грамматика тем 1–",1),
- # итог урока: тексты пройденных блоков могли быть удалены чисткой состояния — не падать
- ("for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:s.bl[i][k],r,",
-  "for(const i in s.res){n++;s.res[i].forEach((r,k)=>{tot++;if(r.v==='ok'||r.v==='typo')ok++;else if(r.v==='bad')bad.push({st,i:+i,x:(s.bl[i]&&s.bl[i][k])||{ru:'(текст задания не сохранён)',ko:'—',t:'',u:''},r,",1),
- # чистка состояния: блоки с ошибками не удаляются — они нужны для итога темы
- ("for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]){delete s.bl[i];",
-  "for(const i of Object.keys(s.bl)){if(+i<s.bi&&s.res&&s.res[i]&&!s.res[i].some(r=>r&&r.v==='bad')){delete s.bl[i];",1),
- # словарная тема: перед первым блоком раздела — знакомство со словами (слово, транскрипция, перевод, пример, озвучка)
- ("function updT(focus){",
-  "function introHTML(s,st){const L=CURW[st.i]||[];return `<div class=\"trn\"><div class=\"tmeta\">${esc(st.label)} · новые слова</div><p class=\"gp\">Посмотри и послушай слова раздела — нажми на слово или пример. Потом проверка: перевод с русского.</p>`+\n L.map(w=>`<div style=\"padding:10px 0;border-bottom:1px solid var(--line)\"><div><span class=\"ko\" data-say=\"${esc(w.ko)}\">${esc(w.ko)}</span> <span class=\"tr\">[${esc(w.tr)}]</span></div><div class=\"ru\">${esc(w.ru)}</div>`+\n (w.extra?`<div class=\"mut\" style=\"font-size:15px\">${esc(w.extra)}</div>`:'')+(w.ex||[]).slice(0,1).map(e=>`<div class=\"mut\" style=\"font-size:16px;margin-top:3px\"><span data-say=\"${esc(e.ko)}\">${esc(e.ko)}</span> — ${esc(e.ru)}</div>`).join('')+'</div>').join('')+\n `<div class=\"tbtns\">${btn('wstart','Начать',1)}</div></div>`;}\nfunction updT(focus){",1),
- # ядро уже показывает список перед разделом — подставляем греческий вариант (с примерами), кнопка «К упражнениям» — wgo или wstart
- ("$('tsum').innerHTML=wIntroHTML(st);","$('tsum').innerHTML=introHTML(s,st);",1),
- ("if(a==='wgo'){","if(a==='wgo'||a==='wstart'){",1),
  # «Диалог» — только когда в контенте есть готовые диалоги
  ("let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}",
   "const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m=\"dlg\"]');if(b&&!HASD)b.hidden=true;}\nlet A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';",1),
