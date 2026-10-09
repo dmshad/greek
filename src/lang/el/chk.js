@@ -16,13 +16,13 @@ const CHK=(()=>{
  }
  /* ---- нормализация: регистр, ς/σ, латиница, пунктуация ---- */
  // κι — форма και (перед гласной и в речи): при сравнении это одно слово
- function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim().replace(/(^| )κι(?= |$)/g,'$1και');}
+ function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim().replace(/(^| )κι(?= |$)/g,'$1και').replace(/ουνε(?= |$)/g,'ουν');}  // разг. -ουνε = -ουν (έχουνε)
  const nsp=s=>s.replace(/\s/g,'');
  function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
  function diff(a,b){return {a,b};}
  // парадигмы глаголов для пояснения «не та форма» (пополняется с темами)
- const PARAD=[{'είμαι':'я','είσαι':'ты','είναι':'он, она, оно / они','είμαστε':'мы','είστε':'вы','είσαστε':'вы'}].map(P=>Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v])));
+ const PARAD=[{'είμαι':'я','είσαι':'ты','είναι':'он, она, оно / они','είμαστε':'мы','είστε':'вы','είσαστε':'вы'},{'έχω':'я','έχεισ':'ты','έχει':'он, она, оно','έχουμε':'мы','έχετε':'вы','έχουν':'они','έχουνε':'они'}].map(P=>Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v])));
  function setLex(D){}
  const canon=s=>s;
  // item: {ko, alt[], traps[{a,why}]}; ответ пользователя

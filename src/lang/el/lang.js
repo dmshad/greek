@@ -20,6 +20,7 @@ const LANG=(()=>{
  const accN=w=>(w.normalize('NFD').match(/\u0301/g)||[]).length;
  // пояснение к неверному ответу: ударение или «звучит так же, пишется иначе»
  const ARTS=new Set(['ο','η','το','οι','τα']);
+ const ENC=new Set(['μου','σου','του','τησ','μασ','σασ','τουσ']);
  function wnote(v,ref){const A=words(v),B=words(ref),B0=W0(ref);if(!A.length)return '';
   // артикль у существительного
   if(B.length===A.length+1&&ARTS.has(B[0])&&A.join(' ')===B.slice(1).join(' '))return 'Существительное учим с артиклем: '+B0.join(' ')+'.';
@@ -31,6 +32,8 @@ const LANG=(()=>{
     if(pr)acc.push('разные слова: '+pr);
     else if(!accN(a)&&accN(b))acc.push('нет ударения в слове '+b);
     else if(accN(a)&&!accN(b)&&syl(b)<=1)acc.push('слово '+b+' односложное — пишется без ударения');
+    else if(accN(b)===2&&accN(a)===1&&B[i+1]&&ENC.has(B[i+1]))acc.push('перед '+B0[i+1]+' нужно второе ударение: '+b+' '+B0[i+1]+' (ударение на 3-м слоге от конца)');
+    else if(accN(a)===2&&accN(b)===1&&B[i+1]&&ENC.has(B[i+1]))acc.push('второе ударение не нужно: '+b+' '+B0[i+1]+' (оно появляется, только если ударение на 3-м слоге от конца)');
     else if(accN(a)&&!accN(b))acc.push('лишнее ударение: '+b);
     else acc.push('ударение не на том слоге: '+b);continue;}
    if(snd(a)===snd(b0)){spl.push(b);continue;}
