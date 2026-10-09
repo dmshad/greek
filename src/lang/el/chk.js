@@ -23,6 +23,9 @@ const CHK=(()=>{
  function diff(a,b){return {a,b};}
  // парадигмы глаголов для пояснения «не та форма» (пополняется с темами)
  const PARAD=[{'είμαι':'я','είσαι':'ты','είναι':'он, она, оно / они','είμαστε':'мы','είστε':'вы','είσαστε':'вы'},{'έχω':'я','έχεισ':'ты','έχει':'он, она, оно','έχουμε':'мы','έχετε':'вы','έχουν':'они','έχουνε':'они'}].map(P=>Object.fromEntries(Object.entries(P).map(([k,v])=>[k,v])));
+ // глаголы на -ω, настоящее время: основа + лицо (слова после LANG.fold: конечная σ)
+ const VEND=[['ουμε','мы'],['ετε','вы'],['ουν','они'],['εισ','ты'],['ει','он, она, оно'],['ω','я']];
+ function vform(w){const b=LANG.bare(w);if(b.length<4)return null;for(const [e,p] of VEND)if(b.endsWith(e))return [b.slice(0,-e.length),p];return null;}
  function setLex(D){}
  const canon=s=>s;
  // item: {ko, alt[], traps[{a,why}]}; ответ пользователя
@@ -57,6 +60,7 @@ const CHK=(()=>{
   // одно слово — другая форма того же глагола (είμαι/είσαι/…): ошибка с пояснением
   {const aw=a.split(' ');for(const x of V){const xw=x.split(' ');if(xw.length!==aw.length)continue;
     const d=xw.map((w,i)=>w===aw[i]?-1:i).filter(i=>i>=0);if(d.length!==1)continue;const i=d[0];
+    {const A=vform(aw[i]),B=vform(xw[i]);if(A&&B&&A[0]===B[0]&&A[1]!==B[1])return {v:'bad',kind:'form',best:x,note:'Не та форма: '+B[1]+' — '+LANG.pretty(xw[i])+' (у тебя '+LANG.pretty(aw[i])+' — '+A[1]+').'};}
     for(const P of PARAD){if(P[aw[i]]&&P[xw[i]])return {v:'bad',kind:'form',best:x,note:'Не та форма: '+P[xw[i]]+' — '+LANG.pretty(xw[i])+' (у тебя '+LANG.pretty(aw[i])+' — '+P[aw[i]]+').'};}}}
   let best=V[0],bd=1e9;for(const x of V){const d=lev(nsp(x),an);if(d<bd){bd=d;best=x;}}
   // ловушка с опечаткой: ошибка по смыслу важнее
