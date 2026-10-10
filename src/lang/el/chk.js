@@ -18,7 +18,11 @@ const CHK=(()=>{
  // допустимые варианты написания → основной (после LANG.fold: конечная σ)
  const SPV={'εταιρία':'εταιρεία','συγνώμη':'συγγνώμη','μπύρα':'μπίρα','άνδρασ':'άντρασ','άνδρα':'άντρα','αδελφόσ':'αδερφόσ','αδελφή':'αδερφή','αδελφό':'αδερφό','αδέλφια':'αδέρφια','επτά':'εφτά','οκτώ':'οχτώ','εννέα':'εννιά','χτεσ':'χθεσ','βδομάδα':'εβδομάδα','την':'τη','στην':'στη'};  // τη/την, στη/στην — оба засчитываются
  // κι — форма και (перед гласной и в речи): при сравнении это одно слово
- function norm(s){return LANG.fold(s).replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim().replace(/(^| )κι(?= |$)/g,'$1και').replace(/ουνε(?= |$)/g,'ουν').split(' ').map(w=>SPV[w]||w).join(' ');}  // разг. -ουνε = -ουν (έχουνε)
+ // ответы русскими буквами (задания «Прочитай»): е = э, я = йа = ья, ю = йу, ё = йо; знак ударения не важен
+ function cyr(s){if(!/[а-яё]/.test(s))return s;return s.normalize('NFD').replace(/\u0301/g,'').normalize('NFC').replace(/е/g,'э').replace(/ё/g,'йо').replace(/я/g,'йа').replace(/ю/g,'йу').replace(/ь/g,'й').replace(/й+/g,'й');}
+ // δε перед согласной (кроме κ π τ ξ ψ, μπ ντ γκ) — то же, что δεν
+ const DE=/(^| )δε (?![αεηιουωάέήίόύώ]|[κπτξψ]|μπ|ντ|γκ)/g;
+ function norm(s){return cyr(LANG.fold(s)).replace(DE,'$1δεν ').replace(/[.,!?;:·~…"'«»“”‘’()\[\]—–\-]/g,' ').replace(/\s+/g,' ').trim().replace(/(^| )κι(?= |$)/g,'$1και').replace(/ουνε(?= |$)/g,'ουν').split(' ').map(w=>SPV[w]||w).join(' ');}  // разг. -ουνε = -ουν (έχουνε)
  const nsp=s=>s.replace(/\s/g,'');
  function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);
   for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
@@ -28,6 +32,18 @@ const CHK=(()=>{
  // глаголы на -ω, настоящее время: основа + лицо (слова после LANG.fold: конечная σ)
  const VEND=[['ουμε','мы'],['ετε','вы'],['ουν','они'],['εισ','ты'],['ει','он, она, оно'],['ω','я']];
  function vform(w){const b=LANG.bare(w);if(b.length<4)return null;for(const [e,p] of VEND)if(b.endsWith(e))return [b.slice(0,-e.length),p];return null;}
+ const PRON={'εγώ':/(ω|μαι)$/,'εσύ':/(εισ|σαι|ασ|ωσ|εσ)$/,'εμείσ':/(ουμε|με|μαστε)$/,'εσείσ':/(ετε|τε)$/,
+  'αυτόσ':/(ει|αι)$/,'αυτή':/(ει|αι)$/,'αυτό':/(ει|αι)$/,'αυτοί':/(ουν|αι)$/,'αυτέσ':/(ουν|αι)$/,'αυτά':/(ουν|αι)$/};
+ // 3-е лицо — только если в русском задании есть то же местоимение (он, она, оно, они): иначе «Αυτός είναι αγόρι» за «Это мальчик» прошло бы
+ const RU3={'αυτόσ':/(^|[^а-яё])он([^а-яё]|$)/i,'αυτή':/(^|[^а-яё])она([^а-яё]|$)/i,'αυτό':/(^|[^а-яё])оно([^а-яё]|$)/i,'αυτοί':/(^|[^а-яё])они([^а-яё]|$)/i,'αυτέσ':/(^|[^а-яё])они([^а-яё]|$)/i,'αυτά':/(^|[^а-яё])они([^а-яё]|$)/i};
+ const SKIP=new Set(['δεν','πού','πώσ','τι','από','και','αλλά','ναι','όχι','λίγο','πολύ','εδώ','εκεί','μόνο','κι']);
+ function dropPron(a,ru){const w=a.split(' ');for(let i=0;i<w.length;i++){const re=PRON[w[i]];if(!re)continue;if(RU3[w[i]]&&!RU3[w[i]].test(ru||''))continue;
+   if(!(i===0||i===w.length-1||['και','αλλά','όχι','ναι'].includes(w[i-1])))continue;
+   const rest=w.slice(0,i).concat(w.slice(i+1));
+   // глагол: первое значимое слово после местоимения (или перед ним, если местоимение в конце)
+   let v=null;if(i<w.length-1){for(let j=i+1;j<w.length;j++)if(!SKIP.has(w[j])){v=w[j];break;}}else{for(let j=i-1;j>=0;j--)if(!SKIP.has(w[j])){v=w[j];break;}}
+   if(v&&re.test(LANG.bare(v)))return rest.join(' ');}
+  return null;}
  function setLex(D){}
  const canon=s=>s;
  // item: {ko, alt[], traps[{a,why}]}; ответ пользователя
@@ -49,12 +65,16 @@ const CHK=(()=>{
    const unk=R.find(o=>o.r.v==='unk');
    if(unk)return {v:'unk',kind:'unk',best:unk.r.best,note:''};
    return {v:'ok',kind:'opt',best:R[0].r.best,note:'Верно: часть в скобках здесь необязательна.'};}
-  const a=norm(raw);
+  let a=norm(raw);
   const V=[];for(const t of [item.ko,...(item.alt||[])])for(const x of expand(t))if(!V.includes(x))V.push(x);
   if(V.includes(a))return {v:'ok',kind:'exact',best:a};
+  // местоимение-подлежащее εγώ, εσύ, εμείς, εσείς можно добавить (в начале части фразы или в конце), если лицо глагола совпадает
+  {const s2=dropPron(a,item.ru);if(s2!==null){if(V.includes(s2))return {v:'ok',kind:'exact',best:s2};a=s2;}}
   const an=nsp(a);
   for(const x of V)if(nsp(x)===an)return {v:'typo',kind:'space',best:x,note:'Только пробелы.'};
-  for(const tr of item.traps||[])for(const x of expand(tr.a))if(nsp(x)===an){
+  // ловушки: варианты шаблона, совпадающие с эталоном, не считаются
+  const TRX=(item.traps||[]).map(tr=>({why:tr.why,xs:expand(tr.a).filter(x=>!V.includes(x))}));
+  for(const tr of TRX)for(const x of tr.xs)if(nsp(x)===an){
    const best=V.slice().sort((p,q)=>lev(nsp(p),an)-lev(nsp(q),an))[0];
    return {v:'bad',kind:'trap',best,note:tr.why};}
   // ударение, односложные, «звучит так же — пишется иначе»
@@ -66,7 +86,7 @@ const CHK=(()=>{
     for(const P of PARAD){if(P[aw[i]]&&P[xw[i]])return {v:'bad',kind:'form',best:x,note:'Не та форма: '+P[xw[i]]+' — '+LANG.pretty(xw[i])+' (у тебя '+LANG.pretty(aw[i])+' — '+P[aw[i]]+').'};}}}
   let best=V[0],bd=1e9;for(const x of V){const d=lev(nsp(x),an);if(d<bd){bd=d;best=x;}}
   // ловушка с опечаткой: ошибка по смыслу важнее
-  for(const tr of item.traps||[])for(const x of expand(tr.a))if(lev(nsp(x),an)<=1&&nsp(x).length>=4)return {v:'bad',kind:'trap',best,note:tr.why+' Плюс ошибка в написании — сравни с эталоном.'};
+  for(const tr of TRX)for(const x of tr.xs)if(lev(nsp(x),an)<=1&&nsp(x).length>=4)return {v:'bad',kind:'trap',best,note:tr.why+' Плюс ошибка в написании — сравни с эталоном.'};
   return {v:'unk',kind:'unk',best,note:''};
  }
  return {check,expand,norm,lev,diff,setLex,canon};

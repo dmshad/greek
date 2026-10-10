@@ -93,7 +93,10 @@ def translit(phrase, syll=False):
     out=[]
     for tok in re.split(r"(\s+|[;,.!?()/'’])", phrase):
         if not tok: continue
-        if re.match(r'[α-ωάέήίόύώϊϋΐΰςΑ-ΩΆΈΉΊΌΎΏ]', tok): out.append(word(tok, syll))
+        if re.match(r'[α-ωάέήίόύώϊϋΐΰςΑ-ΩΆΈΉΊΌΎΏ]', tok):
+            t=word(tok, syll)
+            if len(re.findall(r'[аэиоуыяюёе]', t.lower()))<=1: t=t.replace('\u0301','')   # односложное — без знака ударения
+            out.append(t)
         elif tok==';': out.append('?')
         else: out.append(tok)
     return ''.join(out)

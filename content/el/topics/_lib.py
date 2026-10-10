@@ -15,7 +15,7 @@ def caps(w):
     return unicodedata.normalize('NFC',s).upper()
 def rd(w,ru,u):
     """Упражнение на чтение: ЗАГЛАВНЫМИ + транскрипция + перевод → слово строчными с ударением."""
-    return {'ru':f'Строчными: {caps(w)} — {T(w)} ({ru})','ko':w,'alt':[],'u':u,'traps':[]}
+    return {'ru':f'С ударением: {caps(w)} — {T(w)} ({ru})','ko':w,'alt':[],'u':u,'traps':[]}
 
 # --- упражнения на распознавание сочетаний (тема 3) ---
 def _plain(t): return unicodedata.normalize('NFC',unicodedata.normalize('NFD',t).replace('\u0301',''))
@@ -59,7 +59,7 @@ def art_traps(ko,pred,why):
         for n,a in pred.items():
             for m in _re.finditer(r'\b'+_re.escape(n)+r'\b',t,_re.I):
                 prev=t[:m.start()].rstrip().split(' ')[-1].lower() if t[:m.start()].strip() else ''
-                if prev not in ('ο','η','το','οι','τα','(ο)','(η)'): r.append((m.start(),m.end(),n,a))
+                if _re.sub(r'[()\[\]|]','',prev) not in ('ο','η','το','οι','τα','τον','τη','την','έναν','ένας','μια','μία','ένα','στον','στη','στην','στο','σε','του','της'): r.append((m.start(),m.end(),n,a))
         return sorted(r)
     S=spots(ko); out=[]
     for st,en,n,a in S: out.append((ko[:st]+f'{a} {n}'+ko[en:],why.format(w=n)))

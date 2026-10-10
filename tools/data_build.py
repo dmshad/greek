@@ -1,6 +1,19 @@
 # Сборка контента: content/el/vocab_a1.tsv + content/el/vocab/themes.py + content/el/topics/tNN.py → content/el/data.json
 # Запуск из корня репозитория: python3 tools/data_build.py
 import csv,json,os,sys,importlib
+import re
+# общие допуски в эталонах заданий: «они» без указания пола — и αυτοί, и αυτές; «немного по-гречески» — λίγο и λίγα
+def fixko(t):
+    if not re.search(r'(^|\s)(ο|οι|Ο|Οι) ',t): t=re.sub(r'\((Α|α)υτοί\)',lambda m:'(['+m.group(1)+'υτοί|'+m.group(1)+'υτές])',t)
+    t=re.sub(r'(?<![\[|])\bλίγο (ελληνικά|αγγλικά|ρωσικά)',r'[λίγο|λίγα] \1',t)
+    return t
+def fix(x):
+    if 'ko' in x and not x.get('say'): x['ko']=fixko(x['ko']); x['alt']=[fixko(a) for a in x.get('alt',[])]
+    return x
+def fixg(g):
+    for p in g.get('parts',[]):
+        p['ex']=[[fix(x) for x in b] for b in p.get('ex',[])]
+    return g
 R=os.getcwd(); sys.path.insert(0,R+'/content/el/topics')
 exec(open(R+'/content/el/vocab/themes.py',encoding='utf-8').read())
 # готовые темы: есть файл content/el/topics/tNN.py
@@ -33,11 +46,11 @@ for n,k,name in THEMES:
         course.append(st)
         if n not in READY: continue
         m=importlib.import_module(f't{n:02d}')
-        grammar.append(m.topic())
+        grammar.append(fixg(m.topic()))
         if tw:
             order+=1; blocks.append({'id':f'g{n}','label':f'Т{n} · {name}','order':order})
             for r in tw: add_word(m,r,f'g{n}')
-        if hasattr(m,'bank'): bank[f'g{n}']=m.bank()
+        if hasattr(m,'bank'): bank[f'g{n}']={k:[fix(x) for x in v] for k,v in m.bank().items()}
 # памятка «Артикль»: вступление + разделы из готовых тем (раздел виден, когда открыта его тема)
 memos=[]
 asec=[]
