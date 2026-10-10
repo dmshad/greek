@@ -107,6 +107,33 @@ APP=[
  ("L[i][j]=A[i]===B[j]?L[i+1][j+1]+1:","L[i][j]=DEQ(A[i],B[j])?L[i+1][j+1]+1:",1),
  ("while(i<n&&j<m){if(A[i]===B[j]){keep[j]=true;","while(i<n&&j<m){if(DEQ(A[i],B[j])){keep[j]=true;",1),
  ("function markDiff(a,b,cl){","const DEQ=(x,y)=>x===y||x.toLowerCase().replace('ς','σ')===y.toLowerCase().replace('ς','σ');\nfunction markDiff(a,b,cl){",1),
+ # ===== Таблицы A1 (D.tables): вкладка «Грамматика → Таблицы», ссылки «таблица N» в теории, печатная версия print.html =====
+ # видимость: таблица / часть / строка с after:N — когда курс дошёл до темы N
+ ("  if(D.morphs)D.morphs=D.morphs.filter(m=>!hidN.has(m.topic));",
+  "  if(D.morphs)D.morphs=D.morphs.filter(m=>!hidN.has(m.topic));\n"
+  "  if(D.tables){const vis=n=>{if(!n)return true;const i=S.findIndex(s=>s.id==='g'+n||s.id==='w'+n);return i>=0&&i<=idx;};\n"
+  "   D.tables=D.tables.filter(t=>vis(t.after)).map(t=>Object.assign({},t,{parts:t.parts.filter(p=>vis(p.after)).map(p=>Object.assign({},p,{rows:p.rows.filter(r=>Array.isArray(r)||vis(r.after))}))}));}",1),
+ ("const MEMO=()=>(D.memos||[]).filter(m=>!m.after||GBY[m.after]);",
+  "const MEMO=()=>(D.memos||[]).filter(m=>!m.after||GBY[m.after]);\n"
+  "const TBL=()=>D.tables||[];const TBN=n=>TBL().find(t=>t.n===+n);\n"
+  "const tbMatch=t=>{const q=S.q.toLowerCase();return JSON.stringify([t.title,t.parts]).toLowerCase().includes(q);};\n"
+  "function tbRow(t){return `<div class=\"row\" data-tb=\"${t.n}\"><div class=\"txt gtr\"><span class=\"gn\">${t.n}</span><span class=\"gt\">${esc(t.title)}</span></div></div>`;}\n"
+  "function tbPart(p){const rows=p.rows.map(r=>Array.isArray(r)?r:r.c);let h=tbl({cols:p.cols,rows,note:p.note});\n"
+  " if(p.cols.every(c=>!c))h=h.replace(/<thead>.*?<\\/thead>/,'');return gsec(esc(p.title||''),h);}\n"
+  "const PRINTL='<p class=\"tnote\"><a href=\"print.html\" target=\"_blank\" rel=\"noopener\">Версия для печати — все таблицы A1</a></p>';\n"
+  "function openTable(n){const t=TBN(n);if(!t)return;let h=head('Таблица '+t.n,t.title);for(const p of t.parts)h+=tbPart(p);showSheet(h+PRINTL);}",1),
+ ("const fmt=s=>esc(s).replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>');",
+  "const fmt=s=>esc(s).replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>').replace(/(таблиц[а-я]*\\s+)(\\d+)/gi,(m,a,n)=>TBN(n)?`${a}<span class=\"tref\" data-tb=\"${n}\">${n}</span>`:m);",1),
+ ("  const mm=MEMO().filter(mmMatch);if(mm.length)h+='<h2>Памятки</h2>'+mm.map(memoRow).join('');",
+  "  const mm=MEMO().filter(mmMatch);if(mm.length)h+='<h2>Памятки</h2>'+mm.map(memoRow).join('');\n"
+  "  const tt=TBL().filter(tbMatch);if(tt.length)h+='<h2>Таблицы</h2>'+tt.map(tbRow).join('');",1),
+ (" else if(S.gtab==='memo')h=",
+  " else if(S.gtab==='tables')h=TBL().length?'<h2>Таблицы</h2>'+TBL().map(tbRow).join('')+PRINTL:'<div class=\"empty\">Пока пусто.</div>';\n"
+  " else if(S.gtab==='memo')h=",1),
+ ("$('card').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-say]');if(!t)return;\n if(t.dataset.g)",
+  "$('card').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-say],[data-tb]');if(!t)return;\n if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.g)",1),
+ ("$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo]');if(!t)return;\n if(t.dataset.memo)",
+  "$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo],[data-tb]');if(!t)return;\n if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.memo)",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),
@@ -115,6 +142,8 @@ SHELL=[
  ("<button data-v=\"noko\">Без кор</button>","<button data-v=\"noko\">Без греч</button>",1),
  ("РУС → КОР","РУС → ГРЕ",1),
  ("<button data-v=\"morphs\">Частицы и окончания</button><button data-v=\"conj\">Спряжение</button>","",1),
+ ("<button data-v=\"memo\">Памятки</button>","<button data-v=\"memo\">Памятки</button><button data-v=\"tables\">Таблицы</button>",1),
+ ("#gtab button{font-size:15px;flex:auto;padding:6px 8px}","#gtab button{font-size:15px;flex:auto;padding:6px 8px}\n.tref{color:var(--acc);text-decoration:underline;cursor:pointer;font-weight:600}\n.tnote a{color:var(--acc)}",1),
  ("\"Apple SD Gothic Neo\",","",1),
 ]
 def run():

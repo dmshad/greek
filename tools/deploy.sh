@@ -10,6 +10,7 @@ python3 tools/data_build.py
 python3 tools/build.py el /home/claude/el_app.html
 python3 tools/build_pkg.py /home/claude/el_app.html "$VER" el
 cp /home/claude/pkg/app/* "$R/"
+python3 tools/print_build.py "$R/print.html"   # печатные таблицы A1 (ссылка из вкладки «Таблицы»)
 git -c user.name="dmshad" -c user.email="dmshad@users.noreply.github.com" add -A
 git -c user.name="dmshad" -c user.email="dmshad@users.noreply.github.com" commit -q -m "$MSG"
 git push -q origin HEAD:main

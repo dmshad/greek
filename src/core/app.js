@@ -41,6 +41,8 @@ const COURSE=(()=>{
   D.blocks=D.blocks.filter(b=>!hidB.has(String(b.id)));
   D.grammar=D.grammar.filter(g=>!hidG.has(g.id));
   if(D.morphs)D.morphs=D.morphs.filter(m=>!hidN.has(m.topic));
+  if(D.tables){const vis=n=>{if(!n)return true;const i=S.findIndex(s=>s.id==='g'+n||s.id==='w'+n);return i>=0&&i<=idx;};
+   D.tables=D.tables.filter(t=>vis(t.after)).map(t=>Object.assign({},t,{parts:t.parts.filter(p=>vis(p.after)).map(p=>Object.assign({},p,{rows:p.rows.filter(r=>Array.isArray(r)||vis(r.after))}))}));}
   if(D.conj&&D.conj.cells)for(const k of Object.keys(D.conj.cells))if(hidN.has(D.conj.cells[k].topic))delete D.conj.cells[k];
   if(D.bank)for(const g of hidG)delete D.bank[g];
   for(const g of D.grammar)g.open=(cs.k==='g'&&g.id===cs.g);
@@ -158,7 +160,7 @@ const G=D.grammar||[],M=D.morphs||[],CJ=D.conj||{stems:[],forms:[],cells:{}};
 const GBY=Object.fromEntries(G.map(g=>[g.id,g])),MBY=Object.fromEntries(M.map(m=>[m.id,m]));
 const KIND={particle:'частица',ending:'окончание',adverb:'наречие'};
 const gn=s=>norm(s).replace(/[\s\/\-–—().,?!·«»:;]/g,'');
-const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(таблиц[а-я]*\s+)(\d+)/gi,(m,a,n)=>TBN(n)?`${a}<span class="tref" data-tb="${n}">${n}</span>`:m);
 const txt=s=>String(s||'').split(/\n+/).filter(Boolean).map(p=>`<p>${fmt(p)}</p>`).join('');
 const NW='<span class="nw">не отработано</span>';
 const short=m=>String(m.func||'').split(/[.:]/)[0];
@@ -166,6 +168,13 @@ seg('gtab','gtab');
 function tMatch(g){const q=gn(S.q);return [String(g.n),g.title,g.meaning,...(g.sections||[]).map(x=>x.title),...(g.usage||[]).map(u=>u.sit+' '+u.phrase)].some(x=>gn(x).includes(q));}
 function mMatch(m){const q=gn(S.q);return [m.id,m.func,KIND[m.kind],...(m.forms||[]).map(f=>f.f)].some(x=>gn(x).includes(q));}
 const MEMO=()=>(D.memos||[]).filter(m=>!m.after||GBY[m.after]);
+const TBL=()=>D.tables||[];const TBN=n=>TBL().find(t=>t.n===+n);
+const tbMatch=t=>{const q=S.q.toLowerCase();return JSON.stringify([t.title,t.parts]).toLowerCase().includes(q);};
+function tbRow(t){return `<div class="row" data-tb="${t.n}"><div class="txt gtr"><span class="gn">${t.n}</span><span class="gt">${esc(t.title)}</span></div></div>`;}
+function tbPart(p){const rows=p.rows.map(r=>Array.isArray(r)?r:r.c);let h=tbl({cols:p.cols,rows,note:p.note});
+ if(p.cols.every(c=>!c))h=h.replace(/<thead>.*?<\/thead>/,'');return gsec(esc(p.title||''),h);}
+const PRINTL='<p class="tnote"><a href="print.html" target="_blank" rel="noopener">Версия для печати — все таблицы A1</a></p>';
+function openTable(n){const t=TBN(n);if(!t)return;let h=head('Таблица '+t.n,t.title);for(const p of t.parts)h+=tbPart(p);showSheet(h+PRINTL);}
 const mmMatch=m=>{const q=S.q.toLowerCase();return (m.title+' '+m.sections.map(x=>x.title+' '+x.body).join(' ')).toLowerCase().includes(q);};
 function memoRow(m){return `<div class="row" data-memo="${esc(m.id)}"><div class="txt gtr"><span class="gn">✎</span><span class="gt">${esc(m.title)}</span></div></div>`;}
 function openMemo(id){const m=MEMO().find(x=>x.id===id);if(!m)return;let h=head('Памятка',m.title);for(const x of m.sections.filter(x=>!x.after||GBY[x.after]))h+=gsec(esc(x.title),txt(x.body)+exL(x.ex));showSheet(h);}
@@ -183,8 +192,10 @@ function renderG(){let h='';const Gs=[...G].sort((a,b)=>a.n-b.n);
   if(t.length)h+='<h2>Темы</h2>'+t.map(tRow).join('');
   if(m.length)h+='<h2>Частицы и окончания</h2>'+m.map(mRow).join('');
   const mm=MEMO().filter(mmMatch);if(mm.length)h+='<h2>Памятки</h2>'+mm.map(memoRow).join('');
+  const tt=TBL().filter(tbMatch);if(tt.length)h+='<h2>Таблицы</h2>'+tt.map(tbRow).join('');
   if(!h)h='<div class="empty">Ничего не найдено.</div>';}
  else if(S.gtab==='topics')h=Gs.length?'<h2>Пройденные темы</h2>'+Gs.map(tRow).join(''):'<div class="empty">Пока пусто.</div>';
+ else if(S.gtab==='tables')h=TBL().length?'<h2>Таблицы</h2>'+TBL().map(tbRow).join('')+PRINTL:'<div class="empty">Пока пусто.</div>';
  else if(S.gtab==='memo')h=MEMO().length?'<h2>Памятки</h2>'+MEMO().map(memoRow).join(''):'<div class="empty">Пока пусто.</div>';
  else if(S.gtab==='morphs')h=M.length?'<h2>Частицы и окончания</h2>'+[...M].sort((a,b)=>a.topic-b.topic).map(mRow).join(''):'<div class="empty">Пока пусто.</div>';
  else h='<h2>Сводная таблица спряжения</h2>'+conjHTML();
@@ -216,10 +227,10 @@ function openMorph(id){const m=MBY[id];if(!m)return;const nw=new Set(m['new']||[
  showSheet(h);}
 function showSheet(h){$('card').innerHTML=h;$('cx').onclick=closeCard;
  $('ov').style.display='block';$('sh').scrollTop=0;requestAnimationFrame(()=>$('sh').classList.add('open'));}
-$('card').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-say]');if(!t)return;
- if(t.dataset.g)openTopic(t.dataset.g);else if(t.dataset.m)openMorph(t.dataset.m);else say(t.dataset.say);});
-$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo]');if(!t)return;
- if(t.dataset.memo)return openMemo(t.dataset.memo);t.dataset.g?openTopic(t.dataset.g):openMorph(t.dataset.m);});
+$('card').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-say],[data-tb]');if(!t)return;
+ if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.g)openTopic(t.dataset.g);else if(t.dataset.m)openMorph(t.dataset.m);else say(t.dataset.say);});
+$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo],[data-tb]');if(!t)return;
+ if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.memo)return openMemo(t.dataset.memo);t.dataset.g?openTopic(t.dataset.g):openMorph(t.dataset.m);});
 /* ===== Тренировка ===== */
 let ST={v:1,weak:{},stats:{},sess:null,last:[]};
 function WK(w){const x=ST.weak[w.id];return x?!!x.on:!!w.weak;}
