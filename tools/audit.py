@@ -51,6 +51,7 @@ def noun_forms(art, w, n):
                 if b.endswith(e): out.add(b[:-2] + p)
         if n >= PL_ACC and b.endswith('οσ'): out.add(b[:-2] + 'ουσ')
     elif art == 'η':
+        if b.endswith('οσ') and n >= CASE_ACC: out.add(b[:-1])          # η Κύπρος → την Κύπρο
         if n >= PL_NOM:
             for e, p in (('α', 'εσ'), ('η', 'εσ')):
                 if b.endswith(e): out.add(b[:-1] + p)
@@ -121,8 +122,8 @@ def items(n):
         for e in x.get('ex', []): out.append(('show', 'памятка: пример', e['ko'], e['ru']))
     return out
 
-def strip_tpl(s):   # шаблоны эталонов: [a|b] и (x) → все слова
-    return re.sub(r'[\[\]()|]', ' ', s)
+def strip_tpl(s):   # шаблоны эталонов: [a|b] и (x) → все слова; **жирное** внутри слова склеивается
+    return re.sub(r'[\[\]()|]', ' ', s.replace('**', ''))
 
 def check(n):
     K = known(n); res = []
@@ -134,6 +135,10 @@ def check(n):
             if re.search(r'[\u0370-\u03ff\u1f00-\u1fff]', t.replace('δ', '').replace('θ', '')) and CY.search(t): res.append(('ОШИБКА', where, f'смешение алфавитов: {t}', gk))
         if kind == 'ex' and gk.strip() in ('', '—', '-'): res.append(('ОШИБКА', where, 'пустой эталон', ru))
         if reading: continue
+        for m in re.finditer(r'(?<!\w)(στη|τη)(ν?)(?:\|[^\]]*)?\]?\)? +(\w+)', gk.replace('**', '')):          # τη/την по правилу -ν
+            if not GR.search(m.group(3)): continue
+            need = bool(re.match(r'(?:[αεηιοωυάέήίόύώ]|[κπτξψ]|μπ|ντ|γκ)', m.group(3), re.I))
+            if need != bool(m.group(2)): res.append(('ОШИБКА' if kind == 'ex' else 'замечание', where, f'-ν: {m.group(0)} → {m.group(1)}{"ν" if need else ""} {m.group(3)}', gk[:140]))
         for t in toks(txt):
             if t.isupper() and len(t) > 1: continue                       # ЗАГЛАВНЫЕ в заданиях на чтение
             b = bare(t)
