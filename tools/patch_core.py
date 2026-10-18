@@ -22,9 +22,9 @@ APP=[
  ("(!c.ok&&!c.dk?diffHTML(kn(c.v),kn(w.ko)):'')",
   "(!c.ok&&!c.dk?(LANG.code==='ko'?diffHTML(kn(c.v),kn(w.ko)):`<div class=\"gv bad\">${markDiff(KNP(w.ko),KNP(c.v),'gdx')}</div><div class=\"gfix\">${markDiff(KNP(c.v),KNP(w.ko))}</div>`)+(c.note?`<div class=\"gnote\">${esc(c.note)}</div>`:''):'')",1),
  # повторение слов, когда пройденных слов ещё нет
- ("function initSess(){if(S.app==='rev'){","function initSess(){if(S.app==='rev'){if(!REG.length)return false;",1),
- ("$('list').innerHTML='<div class=\"empty\">Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.</div>'",
-  "$('list').innerHTML='<div class=\"empty\">'+(S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>'",1),
+ (" if(S.app==='rev'){if(!ST.rs){"," if(S.app==='rev'){if(!REG.length)return false;if(!ST.rs){",1),
+ ("(S.app==='wk'?'Список «плохо помню» пуст.':'Текущей словарной темы нет.",
+  "(S.app==='wk'?'Список «плохо помню» пуст.':S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет.",1),
  # поиск в словаре: без ударений
  ("return norm(w.ko).includes(S.q)||norm(w.ru).includes(S.q)||norm(w.tr).includes(S.q);}",
   "const nb=s=>(LANG.bare?LANG.bare(norm(s)):norm(s)).replace(/э/g,'е'),q=nb(S.q);return nb(w.ko).includes(q)||nb(w.ru).includes(q)||nb(w.tr).includes(q);}",1),
@@ -84,7 +84,7 @@ APP=[
   "$('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};",1),
  # озвучка эталона: у заданий «прочитай» эталон русскими буквами — озвучивается греческое слово (x.say)
  ("traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict};}","traps:Array.isArray(x.traps)?x.traps:[],strict:!!x.strict,say:x.say||''};}",1),
- (":`<div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>Эталон: ",":`<div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>Эталон: ",1),
+ ("<div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>Эталон: ","<div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>Эталон: ",1),
  ("<div class=\"gfix\"${rk?` data-say=\"${esc(fx)}\"`:''}>","<div class=\"gfix\"${rk?` data-say=\"${esc(x.say||fx)}\"`:''}>",1),
  (" <div class=\"gref\"${rk?` data-say=\"${esc(ref)}\"`:''}>${rk?'Ближайший эталон: '"," <div class=\"gref\"${rk?` data-say=\"${esc(x.say||ref)}\"`:''}>${rk?'Ближайший эталон: '",1),
  # скрытие будущего: блоки слов есть и у грамматических шагов (слова, которые вводит тема)

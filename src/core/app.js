@@ -108,7 +108,7 @@ function row(w){const o=S.open.has(w.id),hk=S.mode==='noko'&&!o,hr=S.mode==='nor
  (showTr?`<span class="tr">[${esc(w.tr)}]</span>`:(S.tr&&S.mode==='noko'?` <span class="tr">${hid}</span>`:''))+
  `<div class="ru">${hr?hid:esc(w.ru)}</div></div><button class="wkb${WK(w)?' on':''}" data-wk="${esc(w.id)}" aria-label="Плохо помню">${WK(w)?'●':'○'}</button>${eye}</div>`;}
 function togWeak(id){const w=BY[id];if(!w)return;ST.weak[id]=WK(w)?{on:0,c:0}:{on:1,c:0,m:1};saveST();}
-function render(){document.body.classList.toggle('rv',S.app==='rev');$('dseg').hidden=S.app!=='rev';if(S.app==='rev')dsegUpd();if(S.app==='dlg')return renderD();if(S.app==='prog')return renderP();if(S.app==='gram')return renderG();if(S.app==='train'||S.app==='rev')return renderT();
+function render(){document.body.classList.toggle('rv',S.app==='rev');$('dseg').hidden=S.app!=='rev';if(S.app==='rev')dsegUpd();if(S.app==='dlg')return renderD();if(S.app==='prog')return renderP();if(S.app==='gram')return renderG();if(S.app==='train'||S.app==='rev'||S.app==='wk')return renderT();
  $('trb').disabled=S.mode==='noko';$('trb').classList.toggle('on',S.tr&&S.mode!=='noko');
  const nw=W.filter(w=>WK(w)).length;$('wk').classList.toggle('on',S.weak);$('wk').innerHTML='<span style="color:var(--acc)">●</span>'+(nw?' '+nw:'');
  const L=W.filter(match);
@@ -123,6 +123,7 @@ function render(){document.body.classList.toggle('rv',S.app==='rev');$('dseg').h
  else{for(const [c,n] of CAT){const g=L.filter(w=>w.cat===c);if(!g.length)continue;secs.push(['s'+i,n]);h+=`<h2 id="s${i++}">${n}</h2>`;
   const subs=[...new Set(g.map(w=>w.sub))];
   for(const s of subs){if(s)h+=`<h3>${esc(SUBN[s]||s)}</h3>`;h+=g.filter(w=>w.sub===s).map(row).join('');}}}
+ if(S.weak&&nw&&L.length)h=`<div class="tbtns" style="margin:10px 0 6px"><button class="tb pri" data-wtr="1">Тренировать все слова списка (${nw})</button></div>`+h;
  $('list').innerHTML=h;
  $('jump').innerHTML=secs.map(s=>`<button class="chip" data-s="${s[0]}">${esc(s[1])}</button>`).join('');hh();}
 const IN='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
@@ -130,7 +131,7 @@ function ini(s){if(LANG.ini)return LANG.ini(s);const c=s.charCodeAt(0)-0xAC00;re
 function hh(){document.documentElement.style.setProperty('--hh',document.querySelector('header').offsetHeight+'px');}
 addEventListener('resize',hh);
 $('jump').onclick=e=>{const b=e.target.closest('button');if(b)document.getElementById(b.dataset.s).scrollIntoView({block:'start'});};
-$('list').onclick=e=>{const kb=e.target.closest('.wkb');if(kb){togWeak(kb.dataset.wk);render();return;}const eb=e.target.closest('.eye');
+$('list').onclick=e=>{if(S.app==='dict'&&e.target.closest('[data-wtr]'))return startWk();const kb=e.target.closest('.wkb');if(kb){togWeak(kb.dataset.wk);render();return;}const eb=e.target.closest('.eye');
  if(eb){const id=eb.dataset.e;S.open.has(id)?S.open.delete(id):S.open.add(id);render();return;}
  const r=e.target.closest('.row');if(r)openCard(r.dataset.id);};
 // голос не задаём: по u.lang система берёт голос, выбранный в настройках устройства
@@ -237,7 +238,7 @@ function WK(w){const x=ST.weak[w.id];return x?!!x.on:!!w.weak;}
 let REF=null,SAVEQ=Promise.resolve(),TREADY=false,TLOCAL=false;
 /* Чистка состояния (03.10): храним позицию, «плохо помню», «Спорные», счётчики и незаконченное.
    Уроки прошлых тем (lesArc) — только текущая позиция и повтор; в уроке — тексты завершённых блоков удаляются, остаются вердикты. */
-function pruneST(){try{
+function pruneST(){try{delete ST.grstat;
  if(ST.lesArc&&typeof COURSE==='object'&&COURSE.on){const keep=new Set([COURSE.cur,COURSE.view].filter(Boolean));for(const g of Object.keys(ST.lesArc))if(!keep.has(g))delete ST.lesArc[g];}
  const S=Object.values((ST.les&&ST.les.by)||{});for(const L of Object.values(ST.lesArc||{}))S.push(...Object.values((L&&L.by)||{}));
  for(const s of S){if(!s||!s.bl||typeof s.bi!=='number')continue;
@@ -281,7 +282,9 @@ const CURW=CURB.map(b=>W.filter(w=>w.block===b)),CURS=new Set(CURW.flat().map(w=
 const STAGES=[...CURB.map((b,i)=>({id:'s'+i,i,label:'Раздел '+(i+1),kind:'sec',dir:'rk'})),
  ...(CURB.length?(REG.length?[{id:'all',label:'Вся тема',kind:'all',dir:'rk'},{id:'mixrk',label:'Смешанные РУС→ГРЕ',kind:'mix',dir:'rk'},{id:'mixkr',label:'Смешанные ГРЕ→РУС',kind:'mix',dir:'kr'}]:[{id:'all',label:'Вся тема РУС→ГРЕ',kind:'all',dir:'rk'},{id:'allkr',label:'Вся тема ГРЕ→РУС',kind:'all',dir:'kr'}]):[])];
 const RSTG={id:'rev',label:'Повторение',kind:'rev',dir:'rk'};
-const STG=Object.fromEntries([...STAGES,RSTG].map(x=>[x.id,x])),FLOW=STAGES.map(x=>x.id),THEME=CURB.join(',');
+/* Тренировка «плохо помню» (18.10): один блок из всех слов списка в случайном порядке; верные ответы слова из списка не убирают */
+const WSTG={id:'wk',label:'Плохо помню',kind:'wk',dir:'rk'};
+const STG=Object.fromEntries([...STAGES,RSTG,WSTG].map(x=>[x.id,x])),FLOW=STAGES.map(x=>x.id),THEME=CURB.join(',');
 const RUC={};W.forEach(w=>{RUC[w.ru]=(RUC[w.ru]||0)+1;});
 const kn=s=>(LANG.fold?LANG.fold(String(s||'')):String(s||'').normalize('NFC')).replace(/[\s.,!?~'’();·]/g,'');
 const KNP=s=>{const t=(LANG.fold?LANG.fold(String(s||'')):String(s||'')).replace(/[.,!?~'’();·]/g,'').replace(/\s+/g,' ').trim();return LANG.pretty?LANG.pretty(t):t;};
@@ -307,6 +310,7 @@ function dobor(n){const out=shuf(REG.filter(WK)).slice(0,n).map(w=>w.id);
  return out;}
 function chunk(a,k){const r=[];for(let i=0;i<a.length;i+=k)r.push(a.slice(i,i+k));return r;}
 function buildSeries(kind){
+ if(kind==='wk')return [shuf(W.filter(WK).map(w=>w.id))];
  if(kind==='all'){const a=shuf([...CURS,...dobor(4)]);return chunk(a,Math.ceil(a.length/Math.ceil(a.length/8)));}
  if(kind==='rev')return chunk(spread(pick(REG,100,new Set())),10);
  const cur=[...CURS],A=[...cur,...cur,...dobor(10)],B=spread(pick(REG,50,new Set(A))),bl=Array.from({length:10},()=>[]);
@@ -318,19 +322,23 @@ function nextBlock(s){const st=STG[s.stage];let ids;
  else{if(!s.blocks||s.bi>=s.blocks.length-1){s.blocks=buildSeries(st.kind);s.bi=-1;s.cov=null;}s.bi++;ids=s.blocks[s.bi];}
  ids=stitch(ids,s.tail||[]);s.bn++;s.q=ids.map(id=>({id}));s.pos=0;s.res={};s.rep=0;s.ph='q';s.cur={st:'ask',r:null,v:''};}
 function sessFor(id,dir){const s={stage:id,dir:dir||STG[id].dir,bn:0,blocks:null,bi:-1,tail:[],cov:null};nextBlock(s);return s;}
-function initSess(){if(S.app==='rev'){if(!REG.length)return false;if(!ST.rs){ST.rs={};if(ST.rsess){ST.rs[ST.rsess.dir||'rk']=ST.rsess;ST.rd=ST.rsess.dir||'rk';}delete ST.rsess;}
+function initSess(){if(S.app==='wk'){if(ST.wk&&(!ST.wk.q||ST.wk.q.some(x=>!BY[x.id])))ST.wk=null;if(!ST.wk){if(!W.some(WK))return false;ST.wk=sessFor('wk','rk');}return true;}
+ if(S.app==='rev'){if(!REG.length)return false;if(!ST.rs){ST.rs={};if(ST.rsess){ST.rs[ST.rsess.dir||'rk']=ST.rsess;ST.rd=ST.rsess.dir||'rk';}delete ST.rsess;}
  ST.rd=ST.rd||'rk';if(!ST.rs[ST.rd])ST.rs[ST.rd]=sessFor('rev',ST.rd);return true;}
  if(!STAGES.length)return false;
  if(!ST.sess||ST.sess.theme!==THEME){ST.sessArc=ST.sessArc||{};if(ST.sess&&ST.sess.theme!=null)ST.sessArc[ST.sess.theme]=ST.sess;ST.sess=ST.sessArc[THEME]||{theme:THEME,cur:STAGES[0].id,by:{}};delete ST.sessArc[THEME];}
  if(!STAGES.some(x=>x.id===ST.sess.cur))ST.sess.cur=STAGES[0].id;
  if(!ST.sess.by[ST.sess.cur])ST.sess.by[ST.sess.cur]=sessFor(ST.sess.cur);return true;}
-const SS=()=>S.app==='rev'?ST.rs[ST.rd]:ST.sess.by[ST.sess.cur];
+const SS=()=>S.app==='wk'?ST.wk:S.app==='rev'?ST.rs[ST.rd]:ST.sess.by[ST.sess.cur];
+function startWk(){const same=()=>{const a=new Set((ST.wk.q||[]).filter(x=>!x.rep).map(x=>x.id)),b=W.filter(WK);return a.size===b.length&&b.every(w=>a.has(w.id));};
+ if(TREADY&&W.some(WK)&&(!ST.wk||ST.wk.ph==='sum'||(ST.wk.q||[]).some(x=>!BY[x.id])||!same())){ST.wk=sessFor('wk',(ST.wk&&ST.wk.dir)||'rk');saveST();}$('list').innerHTML='';setApp('wk');}
 function goStage(id){ST.sess.cur=id;if(!ST.sess.by[id])ST.sess.by[id]=sessFor(id);saveST();updT(true);scrollTo(0,0);}
-function adv(s,r){const it=s.q[s.pos];if(!it.rep){s.res[it.id]=r;record(it.id,r);}
+function recWk(id,r){const s=ST.stats[id]||(ST.stats[id]=[0,0,0]);s[r==='ok'?0:r==='peek'?1:2]++;if(r!=='ok')ST.weak[id]={on:1,c:0};}
+function adv(s,r){const it=s.q[s.pos];if(!it.rep){s.res[it.id]=r;s.stage==='wk'?recWk(it.id,r):record(it.id,r);}
  s.pos++;
  if(s.pos>=s.q.length&&!s.rep){s.rep=1;s.q.push(...s.q.filter(x=>!x.rep&&s.res[x.id]==='bad').map(x=>({id:x.id,rep:1})));}
  if(s.pos>=s.q.length){s.ph='sum';s.tail=s.q.slice(-2).map(x=>x.id);const st=STG[s.stage];
-  if(st.kind!=='sec'&&s.bi===s.blocks.length-1&&!s.cov){const ids=[...new Set(s.blocks.flat())];s.cov=ids.length;ST.last=ids;}}
+  if(st.kind!=='sec'&&s.bi===s.blocks.length-1&&!s.cov){const ids=[...new Set(s.blocks.flat())];s.cov=ids.length;if(st.kind!=='wk')ST.last=ids;}}
  else s.cur={st:'ask',r:null,v:''};
  saveST();}
 const LJ='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ',VJ='ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ',
@@ -346,18 +354,19 @@ const btn=(a,t,pri,on,g)=>`<button class="tb${pri?' pri':''}${on?' on'+(g?' g':'
 function sumHTML(s,st){const ids=s.q.filter(x=>!x.rep).map(x=>x.id),ok=ids.filter(id=>s.res[id]==='ok').length;
  const L=r=>ids.filter(id=>s.res[id]===r).map(id=>`<div class="sw"><span class="swk" data-say="${esc(BY[id].ko)}">${esc(BY[id].ko)}</span> <span class="mut">${esc(BY[id].ru)}</span></div>`).join('');
  const bd=L('bad'),pk=L('peek'),end=st.kind!=='sec'&&s.bi===s.blocks.length-1;
- let h=`<div class="trn"><div class="tmeta">Блок ${s.bn} завершён</div><div class="tp">${ok} из ${ids.length}</div>`+
+ let h=`<div class="trn"><div class="tmeta">${st.kind==='wk'?'Тренировка «плохо помню» завершена':`Блок ${s.bn} завершён`}</div><div class="tp">${ok} из ${ids.length}</div>`+
   (bd?`<div class="sh2">Ошибки</div>${bd}`:'')+(pk?`<div class="sh2">Подсмотрел / не уверен</div>${pk}`:'');
- if(end)h+=`<p class="tcov">${st.kind==='all'?'Этап пройден':'Серия завершена'}. Охват: ${s.cov} из ${W.length} слов.</p><div class="tbtns">${btn('ns',st.kind==='all'?'Ещё раз':'Новая серия',1)}</div>`;
+ if(end&&st.kind==='wk')h+=`<p class="tcov">Все слова списка пройдены. Ответы в этой тренировке не убирают слова из «плохо помню»; ошибка сбрасывает счёт верных ответов.</p><div class="tbtns">${btn('ns','Ещё раз',1)}${btn('wl','К списку')}</div>`;
+ else if(end)h+=`<p class="tcov">${st.kind==='all'?'Этап пройден':'Серия завершена'}. Охват: ${s.cov} из ${W.length} слов.</p><div class="tbtns">${btn('ns',st.kind==='all'?'Ещё раз':'Новая серия',1)}</div>`;
  else h+=`<div class="tbtns">${btn('nb','Следующий блок',1)}</div>`;
  return h+'</div>';}
-function updT(focus){const s=SS(),st=STG[s.stage],rv=S.app==='rev';
+function updT(focus){const s=SS(),st=STG[s.stage],wk=S.app==='wk',rv=S.app==='rev'||wk;
  $('tst').hidden=rv;$('tnx').hidden=rv;$('tls').hidden=rv;
  $('tst').innerHTML=STAGES.map(x=>`<button class="chip${x.id===s.stage?' on':''}" data-st="${x.id}">${x.label}</button>`).join('')+(rv?'':`<button class="chip" data-ws="1">Итог темы</button>`);
  {const o=$('tst').querySelector('.on');if(o)o.scrollIntoView({inline:'nearest',block:'nearest'});}
- $('tdir').textContent=s.dir==='rk'?'РУС → ГРЕ':'ГРЕ → РУС';$('tcnt').textContent='Блок '+s.bn;
+ $('tdir').textContent=s.dir==='rk'?'РУС → ГРЕ':'ГРЕ → РУС';$('tcnt').textContent=wk?'':'Блок '+s.bn;
  const fi=FLOW.indexOf(s.stage);$('tnx').disabled=fi<0;
- $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
+ $('tsp').textContent=TLOCAL?'Прогресс сохраняется только на этом устройстве':(wk?'Плохо помню: '+s.q.filter(x=>!x.rep).length+' сл. · из списка не убираются':rv?'Весь словарь, кроме текущей темы':'Текущая тема: блоки '+CURB.join(', '));
  const ta=$('ta');
  if(!rv&&st.kind==='sec'&&(s.seen===0||(s.seen==null&&s.bn===1&&s.pos===0&&!Object.keys(s.res).length))){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=wIntroHTML(st);ta.blur();$('tcnt').textContent='';hh();return;}
  if(s.ph==='sum'){$('tcard').hidden=true;$('tsum').hidden=false;$('tsum').innerHTML=sumHTML(s,st);ta.blur();hh();return;}
@@ -396,6 +405,8 @@ function act(a){const s=SS(),c=s.cur;
  if(a==='next'){adv(s,c.r);return updT(true);}
  if(a==='kok'||a==='kno'){adv(s,a==='kok'?'ok':'bad');return updT();}
  if(a==='nb'){nextBlock(s);saveST();scrollTo(0,0);return updT(true);}
+ if(a==='wl'){S.weak=true;return setApp('dict');}
+ if(a==='ns'&&s.stage==='wk'&&!W.some(WK)){S.weak=true;return setApp('dict');}
  if(a==='ns'){s.blocks=null;nextBlock(s);saveST();scrollTo(0,0);return updT(true);}
  if(a==='dk'){c.st='shown';c.dk=1;c.ok=0;c.r='bad';c.v='';}
  else if(a==='typo')c.r=c.r==='ok'?'bad':'ok';
@@ -426,7 +437,7 @@ ${rw.map(f).join('\n')||'—'}`;
  <textarea id="wsum" readonly rows="12">${esc(t)}</textarea>${courseNextHTML()}<div class="tbtns"><button class="tb" data-wc="1">Скопировать</button></div></div>`;hh();}
 $('list').addEventListener('click',e=>{const b=e.target.closest('#tsum [data-wc]');if(!b)return;const t=$('wsum');t.select();
  try{navigator.clipboard.writeText(t.value).then(()=>{b.textContent='Скопировано';},()=>{b.textContent='Выдели и скопируй вручную';});}catch(x){b.textContent='Выдели и скопируй вручную';}});
-$('tdir').onclick=()=>{if(!TREADY)return;if(S.app==='rev'&&(S.rtab==='n'||S.rtab==='c'))return xDir();if(S.app==='rev'&&S.rtab==='g')return grDir();if(S.app==='rev'){ST.rd=ST.rd==='rk'?'kr':ST.rd==='kr'?'au':'rk';saveST();$('list').innerHTML='';scrollTo(0,0);return render();}const s=SS(),n=sessFor(s.stage,s.dir==='rk'?'kr':'rk');if(S.app==='rev')ST.rsess=n;else ST.sess.by[s.stage]=n;saveST();updT(true);};
+$('tdir').onclick=()=>{if(!TREADY)return;if(S.app==='rev'&&(S.rtab==='n'||S.rtab==='c'))return xDir();if(S.app==='rev'&&S.rtab==='g')return grDir();if(S.app==='rev'){ST.rd=ST.rd==='rk'?'kr':ST.rd==='kr'?'au':'rk';saveST();$('list').innerHTML='';scrollTo(0,0);return render();}if(S.app==='wk'&&!W.some(WK))return;const s=SS(),n=sessFor(s.stage,s.dir==='rk'?'kr':'rk');if(S.app==='wk')ST.wk=n;else if(S.app==='rev')ST.rsess=n;else ST.sess.by[s.stage]=n;saveST();updT(true);};
 function openList(){const s=SS(),st=STG[s.stage],L=st.kind==='sec'?CURW[st.i]:CURW.flat();
  if(st.kind==='sec'&&S.app!=='rev'){s.seen=0;saveST();scrollTo(0,0);return updT();}
  showSheet(`<div class="top"><div class="gtitle">${st.kind==='sec'?esc(st.label):'Слова темы'}</div><button class="x" id="cx" aria-label="Закрыть">×</button></div>`+
@@ -434,7 +445,7 @@ function openList(){const s=SS(),st=STG[s.stage],L=st.kind==='sec'?CURW[st.i]:CU
 $('tnx').onclick=()=>{if(!TREADY)return;const fi=FLOW.indexOf(SS().stage);if(fi>=0&&fi<FLOW.length-1)goStage(FLOW[fi+1]);else if(fi===FLOW.length-1){wSum();scrollTo(0,0);}};
 function renderT(){tabHi();if(xMode())return renderX();if(exMode())return renderEX();$('tdir').hidden=false;$('jump').innerHTML='';
  if(!TREADY){$('list').innerHTML='<div class="empty">Загрузка…</div>';hh();return;}
- if(!initSess()){$('list').innerHTML='<div class="empty">'+(S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>';$('trainbars').hidden=false;$('tdir').hidden=true;$('tnx').hidden=true;$('tst').hidden=true;$('tcnt').textContent='';hh();return;}
+ if(!initSess()){$('list').innerHTML='<div class="empty">'+(S.app==='wk'?'Список «плохо помню» пуст.':S.app==='rev'?'Повторять пока нечего: пройденных слов ещё нет.':'Текущей словарной темы нет. Урок грамматики — вкладка «Грамматика» выше.')+'</div>';$('trainbars').hidden=false;$('tdir').hidden=true;$('tnx').hidden=true;$('tst').hidden=true;$('tcnt').textContent='';hh();return;}
  $('trainbars').hidden=false;
  if(!$('tcard')){$('list').innerHTML=`<div class="trn" id="tcard"><div class="thd"><div class="tmeta" id="tmeta"></div><button class="chip" id="tls">Список</button></div><div class="tp" id="tp"></div><div class="thint" id="thint"></div><input id="ta" lang="${LANG.code}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Ответ"><div id="tout"></div><div class="tbtns" id="tbtns"></div></div><div id="tsum" hidden></div>`;bindT();}
  updT(false);}
@@ -546,8 +557,8 @@ function valid(r,sl){if(!Array.isArray(r))throw {code:'invalid_json'};const n=sl
  if(it.length<Math.ceil(n/2))throw {code:'invalid_json'};return it;}
 
 /* --- Повторение: сессии и план --- */
-function GS(){if(ST.gr&&!ST.grs){ST.grs={[ST.gr.dir||'rk']:ST.gr};ST.grd=ST.gr.dir||'rk';ST.grstat=ST.gr.stats||{};}delete ST.gr;
- ST.grs=ST.grs||{};ST.grd=ST.grd||'rk';ST.grstat=ST.grstat||{};return ST.grs[ST.grd];}
+function GS(){if(ST.gr&&!ST.grs){ST.grs={[ST.gr.dir||'rk']:ST.gr};ST.grd=ST.gr.dir||'rk';}delete ST.gr;
+ ST.grs=ST.grs||{};ST.grd=ST.grd||'rk';return ST.grs[ST.grd];}
 function fixRun(b){for(let i=2;i<b.length;i++)if(b[i].t===b[i-1].t&&b[i].t===b[i-2].t){const j=b.findIndex((x,k)=>k>i&&x.t!==b[i].t);if(j>0)[b[i],b[j]]=[b[j],b[i]];}return b;}
 function planSeries(sel){const T=GTOP.filter(g=>gMod(g).length&&!(g.nokr&&ST.grd==='kr')&&(!sel||sel.includes(g.n))&&(!OFF||BANK.has(g.id)));if(!T.length)return [];
  let sl=[];T.forEach(g=>sl.push(g.id,g.id));
@@ -626,7 +637,7 @@ function offChk(s,i){exSave();const a=s.ans[i]||[];
   if(!u||u==='-')return {v:'bad',fix:'',note:'',e:'empty'};
   if(s.dir==='kr')return {v:'unk',fix:'',note:'',e:''};
   const r=CHK.check(x,u);
-  if(r.v==='unk')return {v:'unk',fix:r.best||'',note:'',e:'',dsp:1};
+  if(r.v==='unk')return {v:'unk',fix:r.best||'',note:r.note||'',e:'',dsp:r.typo?0:1,typo:r.typo?1:0};
   return {v:r.v,fix:r.v==='bad'?(r.best||''):'',note:r.note||'',e:r.v==='bad'?r.kind:''};});
  s.res[i].forEach((r,k)=>{if(r.v!=='unk')grStat(s.bl[i][k].t,r.v!=='bad',1);});saveST();exUpd();}
 function exSelf(k,v){const s=EXA();if(!s||!s.res[s.bi])return;const r=s.res[s.bi][k],x=s.bl[s.bi][k];if(!r||r.v!=='unk')return;
@@ -639,9 +650,9 @@ function ruH(t){return esc(t).replace(/\((?:[^()]|\([^()]*\))*\)/g,m=>`<span cla
 function koH(x){const m=String(x.ru||'').match(/^\s*(\([^()]*\))/);return (m?`<span class="ctx">${esc(m[1])}</span> `:'')+esc(x.ko);}
 function unkHTML(s,i,k,x,r,u,rk){const ref=rk?(r.fix||x.ko):x.ru;
  return `<div class="gi"><div class="gq sm${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):koH(x)}</div>
- <div class="gv unk">${rk?markDiff(ref,u,'gdx'):esc(u)} <span class="gvt">${rk?'не распознано':'сверь сам'}</span></div>
+ <div class="gv unk">${rk?markDiff(ref,u,'gdx'):esc(u)} <span class="gvt">${rk?(r.typo?'опечатка?':'не распознано'):'сверь сам'}</span></div>
  <div class="gref"${rk?` data-say="${esc(x.say||ref)}"`:''}>${rk?'Ближайший эталон: '+markDiff(u,ref):'Эталон: '+esc(ref)}</div>
- ${rk?`<div class="gunk">Автоматически не распознано. Если твой вариант тоже верен — засчитай.</div>`:''}
+ ${rk?`<div class="gunk">${r.note?esc(r.note):'Автоматически не распознано. Если твой вариант тоже верен — засчитай.'}</div>`:''}
  <div class="gft"><span class="gtt">${GL(GBY[x.t])}</span><span><button class="chip gfl" data-a="gself" data-v="ok" data-k="${k}">${rk?'Засчитать':'Верно'}</button> <button class="chip gfl" data-a="gself" data-v="bad" data-k="${k}">${rk?'Моя ошибка':'Неверно'}</button></span></div></div>`;}
 async function chkBlock(){const s=EXA();if(!s)return;const i=s.bi,sid=s.id,key=sid+'|c'+i;if(GR.ck[key]||!s.bl[i]||s.res[i])return;if(s.dir==='au'){exSave();return auChk(s,i);}
  if(OFF)return offChk(s,i);
@@ -649,8 +660,8 @@ async function chkBlock(){const s=EXA();if(!s)return;const i=s.bi,sid=s.id,key=s
  try{const sm=await SMP();if(!sm)throw {code:'no_sample'};
   const r=await sm.json(chkPrompt(s,i),{cache:false});
   if(exById(sid)!==s)return;if(!Array.isArray(r)||r.length<s.bl[i].length)throw {code:'invalid_json'};
-  s.res[i]=s.bl[i].map((x,k)=>{const o=r[k]||{},u=((s.ans[i]||[])[k]||'').trim(),emp=!u||u==='-';const v=emp?'bad':(['ok','typo','bad'].includes(o.v)?o.v:'bad');
-   return {v,fix:String(o.fix||''),note:v==='bad'?String(o.note||''):'',e:emp?'empty':String(o.e||'')};});
+  s.res[i]=s.bl[i].map((x,k)=>{const o=r[k]||{},u=((s.ans[i]||[])[k]||'').trim(),emp=!u||u==='-';const v0=emp?'bad':(['ok','typo','bad'].includes(o.v)?o.v:'bad'),v=v0==='typo'?'unk':v0;
+   return {v,fix:String(o.fix||''),note:v==='bad'?String(o.note||''):v0==='typo'?'Похоже на опечатку. Если это опечатка — «Засчитать»; если не помнил — «Моя ошибка».':'',e:emp?'empty':String(o.e||''),typo:v0==='typo'?1:0};});
   s.res[i].forEach((r,k)=>grStat(s.bl[i][k].t,r.v!=='bad',1));saveST();
  }catch(e){if(exById(sid)===s)GR.err[key]=emsg(e);}
  finally{delete GR.ck[key];if(EXA()===s)exUpd();}}
@@ -658,7 +669,7 @@ async function exWhy(k){const s=EXA();if(!s)return;const i=s.bi,r=s.res[i]&&s.re
  GR.why[key]=1;delete r.whyErr;exUpd();
  try{const sm=await SMP();if(!sm)throw {code:'no_sample'};const a=await sm(whyPrompt(s,i,k),{cache:false});r.why=String(a.text||'').trim();saveST();}
  catch(e){r.whyErr=emsg(e);}finally{delete GR.why[key];if(EXA()===s)exUpd();}}
-function grStat(t,ok,d){GS();const x=ST.grstat[t]||(ST.grstat[t]=[0,0]);x[ok?0:1]+=d;}
+function grStat(){} // статистика грамматики по темам не ведётся (12.10)
 function exFlip(k){const s=EXA(),r=s.res[s.bi][k],t=s.bl[s.bi][k].t,was=r.v!=='bad';
  r.v=was?'bad':'ok';r.man=1;if(r.v==='bad'&&!r.note)r.note='Отмечено вручную.';grStat(t,was,-1);grStat(t,!was,1);saveST();exUpd();}
 function exSave(){const s=EXA();if(!s||!s.bl[s.bi]||s.res[s.bi]||!$('gcard'))return;const v=[...document.querySelectorAll('#gcard .gin')].map(x=>x.value);if(v.length)s.ans[s.bi]=v;saveST();}
@@ -696,7 +707,7 @@ function blockHTML(s,title,foot){if(s.kind==='les'&&!s.bl[s.bi]){const x=lesStat
   return `<div class="gi"><div class="gq sm${rk?'':' k'}"${rk?'':` data-say="${esc(x.ko)}"`}><span class="gk">${k+1}</span>${rk?ruH(x.ru):koH(x)}</div>
   <div class="gv ${bad?'bad':'ok'}">${bad&&rk&&u&&u!=='-'?markDiff(fx,u,'gdx'):esc(u||'—')} <span class="gvt">${bad?'ошибка':r.v==='typo'?'описка — засчитано':'верно'}</span></div>`+
   (bad?`<div class="gfix"${rk?` data-say="${esc(x.say||fx)}"`:''}>${rk&&u&&u!=='-'?markDiff(u,fx):esc(fx)}</div>${r.note?`<div class="gnote">${esc(r.note)}</div>`:''}${rk&&r.fix&&kn(ref)!==kn(fx)?`<div class="gref" data-say="${esc(ref)}">Можно и так: ${esc(ref)}</div>`:''}`
-   :`<div class="gref"${rk?` data-say="${esc(x.say||ref)}"`:''}>Эталон: ${esc(rk?tplK(x):ref)}${rk?' ▶':''}</div>`)+
+   :`${r.note?`<div class="gnote">${esc(r.note)}</div>`:''}<div class="gref"${rk?` data-say="${esc(x.say||ref)}"`:''}>Эталон: ${esc(rk?tplK(x):ref)}${rk?' ▶':''}</div>`)+
   (r.why?`<div class="gwhy">${txt(r.why)}</div>`:GR.why[wk]?`<p class="gnote">Объясняю…</p>`:r.whyErr?`<div class="gnote">${esc(r.whyErr)}</div>`:'')+
   `<div class="gft"><span class="gtt">${GL(GBY[x.t])}</span><span>${bad&&!OFF&&!r.why&&!GR.why[wk]?`<button class="chip gfl" data-a="gwhy" data-k="${k}">Почему?</button> `:''}<button class="chip gfl" data-a="gfl" data-k="${k}">${bad?'Засчитать':'Не засчитывать'}</button></span></div></div>`;}).join('');
  return h+foot;}
@@ -1120,7 +1131,7 @@ function trFillOff(m){const TRG=TRGM[m],T=TRS(m),k=DS().sit;TRG.err=null;const P
 function trCheckOff(c,k,txt,m){const L=c.lines[k];
  if(L.s!=='me'){c.res[k]={t:txt,v:'self',fix:'',note:'',tip:''};return trAdv(m);}
  const r=CHK.check({ru:L.ru,ko:L.tpl||L.ko,alt:L.alt||[],traps:L.traps||[],u:''},txt);
- if(r.v==='unk')c.res[k]={t:txt,v:'bad',unk:1,fix:'',note:'Не распознано. Сравни с эталоном: если твой вариант верный — «Засчитать» (ответ попадёт в «Спорные»).',tip:''};
+ if(r.v==='unk')c.res[k]={t:txt,v:'bad',unk:r.typo?0:1,fix:r.typo?(r.best||''):'',note:r.typo?r.note:(r.note?r.note+' ':'')+'Не распознано. Сравни с эталоном: если твой вариант верный — «Засчитать» (ответ попадёт в «Спорные»).',tip:''};
  else c.res[k]={t:txt,v:r.v,fix:r.v==='ok'?'':(r.best||''),note:r.note||'',tip:''};
  return trAdv(m);}
 async function trFill(m){m=dm(m);const TRG=TRGM[m],T=TRS(m);if(TRG.gen||T.q.length>=1)return;if(OFF)return trFillOff(m);TRG.gen=Date.now();TRG.err=null;trUpd();
@@ -1223,8 +1234,8 @@ const DVN={ok:['верно','ok'],typo:['описка','ok'],bad:['ошибка'
 
 /* ===== Переключатель режима ===== */
 function setApp(a){if(S.app==='dlg'&&a!=='dlg')auStop();S.app=a;S.q='';$('q').value='';try{LSX.setItem('app',a);}catch(e){}
- $('dictbars').hidden=a!=='dict';$('grambars').hidden=a!=='gram';const T=a==='train'||a==='rev',DL=a==='dlg';$('trainbars').hidden=!T;$('rtabbar').hidden=!T;$('dlgbars').hidden=!DL;const PG=a==='prog';$('q').hidden=T||DL||PG;$('tsp').hidden=!(T||DL||PG);
- $('mb').textContent=({dict:'Словарь',gram:'Грамматика',train:'Тема',rev:'Повторение',dlg:'Диалог',prog:'Прогресс'})[a]+' ▾';
+ $('dictbars').hidden=a!=='dict';$('grambars').hidden=a!=='gram';const T=a==='train'||a==='rev'||a==='wk',DL=a==='dlg';$('trainbars').hidden=!T;$('rtabbar').hidden=!T||a==='wk';$('dlgbars').hidden=!DL;const PG=a==='prog';$('q').hidden=T||DL||PG;$('tsp').hidden=!(T||DL||PG);
+ $('mb').textContent=({dict:'Словарь',gram:'Грамматика',train:'Тема',rev:'Повторение',dlg:'Диалог',prog:'Прогресс',wk:'Плохо помню'})[a]+' ▾';
  $('mm').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===a));
  $('q').placeholder=a==='gram'?'είμαι, артикль, ударение…':'Поиск: μητέρα, мать, митэра';
  render();scrollTo(0,0);}
@@ -1274,7 +1285,7 @@ function renderP(){$('tcnt')&&($('tcnt').textContent='');const nw=W.filter(w=>WK
  let h=`<div id="pg"><div class="gtitle">Прогресс</div>`;
  if(COURSE.on)h+=courseHTML();
  h+=`<h3>Доучить</h3><p>${nw?`Слов «плохо помню»: <b>${nw}</b>. Ошибка ставит слово в список, два верных ответа подряд — снимают.`:'Список пуст.'}</p>`;
- if(nw)h+=`<div class="pb"><button data-p="weak" class="pri">Открыть список</button></div>`;
+ if(nw)h+=`<div class="pb"><button data-p="weak" class="pri">Открыть список</button><button data-p="wtr">Тренировать</button></div>`;
  h+=`<h3>Спорные ответы</h3><p class="mut">Ответы, которые проверка не распознала, с твоим решением. Их передают Claude, чтобы пополнить банк вариантами и ловушками.</p>`;
  if(!dp.length)h+=`<p>Пока нет.</p>`;
  else{h+=dp.slice(-30).reverse().map(x=>`<div class="di"><div>${esc(x.ru)}</div><div class="k">${esc(x.a)} <span class="gvt" style="color:${x.v==='ok'?'var(--ok)':'var(--weak)'}">${x.v==='ok'?'засчитано':'ошибка'}</span></div><div class="mut">эталон: ${esc(x.ko)} · ${esc(GL(GBY[x.t])||x.t)}</div></div>`).join('')+(dp.length>30?`<p class="mut">…и ещё ${dp.length-30}</p>`:'');
@@ -1309,6 +1320,7 @@ $('list').addEventListener('click',e=>{const b=e.target.closest('#pg [data-p]');
  if(a!=='dclr'&&a!=='treset')PGS.ask='';
  if(a==='treset'){if(PGS.ask!=='treset'){PGS.ask='treset';render();setTimeout(()=>{if(PGS.ask==='treset'){PGS.ask='';render();}},4000);return;}PGS.ask='';delete ST.les;delete ST.grs;saveST();PGS.msg='Урок и повторение начаты заново.';return render();}
  if(a==='weak'){S.weak=true;return setApp('dict');}
+ if(a==='wtr')return startWk();
  if(a==='dcopy'){const t=(ST.disp||[]).map(x=>[x.t,x.u,x.bid,x.ru,x.ko,x.a,x.v].join(' | ')).join('\n');
   const txt='СПОРНЫЕ ОТВЕТЫ (тема | модель | id | задание | эталон | ответ | решение)\n'+t;
   try{navigator.clipboard.writeText(txt).then(()=>{b.textContent='Скопировано';},()=>{PGS.txt='';PGS.msg='';const w=$('list');w.insertAdjacentHTML('beforeend',`<textarea rows="6" style="width:100%">${esc(txt)}</textarea>`);});}catch(x){}return;}
@@ -1323,9 +1335,9 @@ $('list').addEventListener('click',e=>{const b=e.target.closest('#pg [data-p]');
 $('list').addEventListener('change',e=>{if(e.target.id==='pgfile'){const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>pgRead(String(r.result||''));r.readAsText(f);}
  if(e.target.id==='pgown'){try{LSX.setItem('owner',e.target.value.trim());}catch(x){}}});
 function firstRun(){try{let t=+LSX.getItem('firstRun')||0;if(!t){t=Date.now();LSX.setItem('firstRun',String(t));}return t;}catch(e){return Date.now();}}
-function offUI(){const le=lastExp(),rem=OFF&&!OFFT&&(le?daysAgo(le)>=7:daysAgo(firstRun())>=7);
- $('offbn').textContent=OFFT?'Автономный режим · тест (прогресс отдельно от основного)':'Автономный режим'+(rem?' · прогресс не выгружался '+(le?daysAgo(le)+' дн.':'ни разу')+' → Прогресс':'');
- $('offbn').hidden=!(OFFT||rem);$('offb').hidden=!HASC;$('offb').textContent='Автономный режим: '+(OFFT?'вкл':'выкл');$('offb').classList.remove('ask');}
+function offUI(){ // напоминание о выгрузке прогресса убрано (16.10): тему можно выставить вручную
+ $('offbn').textContent='Автономный режим · тест (прогресс отдельно от основного)';
+ $('offbn').hidden=!OFFT;$('offb').hidden=!HASC;$('offb').textContent='Автономный режим: '+(OFFT?'вкл':'выкл');$('offb').classList.remove('ask');}
 offUI();let OFFASK=0;
 $('offb').onclick=async e=>{e.stopPropagation();
  if(!OFFASK){OFFASK=1;$('offb').textContent=OFFT?'Выключить? Нажми ещё раз':'Включить тест? Нажми ещё раз';$('offb').classList.add('ask');
@@ -1340,5 +1352,5 @@ $('offb').onclick=async e=>{e.stopPropagation();
  ST={v:1,weak:{},stats:{},sess:null,last:[]};offUI();initST();};
 const HASD=!!(D.dlg&&D.dlg.length);{const b=$('mm').querySelector('[data-m="dlg"]');if(b&&!HASD)b.hidden=true;}
 let A0='dict';try{A0=LSX.getItem('app')||'dict';}catch(e){}if(A0==='dlg'&&!HASD)A0='dict';
-setApp(['gram','train','rev','dlg'].includes(A0)?A0:'dict');
+setApp(['gram','train','rev','dlg','wk'].includes(A0)?A0:'dict');
 
