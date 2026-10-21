@@ -612,7 +612,7 @@ const exMax=s=>s.kind==='rev'?s.plan.length:1e9;
 function exReq(s,i){if(s.kind==='rev'){const p=s.plan[i],wk=(p.wk||[]).map(id=>(DR.weak||[]).find(x=>x.id===id)).filter(Boolean).map(x=>'- '+x.task).join('\n');
   return {sl:p.sl,prompt:mkGen({dir:s.dir==='au'?'kr':s.dir,lead:s.dir==='au'?AULEAD:'',n:10,sl:p.sl,w:p.w.filter(id=>!CURS.has(id)),c:p.c.filter(id=>!CURS.has(id)),weak:wk,allowed:GTOP.map(g=>topicTxt(g)).join('\n')})};}
  return lesGen(s,i);}
-function genBlock(s,i){if(!s||s.bl[i]||i>=exMax(s))return Promise.resolve();
+function genBlock(s,i){if(!s||s.bl[i]||i>=exMax(s)||(i<s.bi&&s.res&&s.res[i]))return Promise.resolve();
  if(s.kind==='les'){const st=lesStatic(s,i);if(st){s.bl[i]=st;s.ans[i]=s.ans[i]||[];saveST();return Promise.resolve();}}
  if(OFF){const key=s.id+'|'+i,r=bankBlock(s,i);if(r&&r.length){delete GR.err[key];s.bl[i]=r;s.ans[i]=s.ans[i]||[];saveST();}
   else GR.err[key]=s.kind==='rev'?'В банке нет заданий для тем этого блока. Начни новую серию — в неё войдут только темы из банка.':'В банке нет заданий для этого этапа.';
@@ -800,7 +800,7 @@ function lesHTML(){const L=LES();$('tdir').hidden=true;
 function lesGo(id,view){const L=LES();exSave();L.stage=id;L.view=view||(LBY[id].kind==='part'?'th':'ex');lesS(id);saveST();scrollTo(0,0);exUpd();}
 function lesPump(){const L=LES();if(!L||!L.started||GR.qrun)return;
  for(const st of LSTG){if(st.kind==='end')continue;const s=lesS(st.id);let ns=0;while(lesStatic(s,ns))ns++;
-  const tgt=ns+st.extra;for(let i=0;i<tgt;i++){if(s.bl[i])continue;if(i<ns){genBlock(s,i);continue;}
+  const tgt=ns+st.extra;for(let i=0;i<tgt;i++){if(s.bl[i]||(i<s.bi&&s.res&&s.res[i]))continue;if(i<ns){genBlock(s,i);continue;}
    const key=s.id+'|'+i;if(GR.gen[key]||GR.qf[key])continue;
    GR.qrun=true;genBlock(s,i).catch(()=>{GR.qf[key]=1;}).finally(()=>{GR.qrun=false;setTimeout(lesPump,300);});return;}}}
 function renderEX(){$('jump').innerHTML='';$('trainbars').hidden=false;$('tnx').hidden=true;
