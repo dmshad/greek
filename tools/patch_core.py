@@ -134,6 +134,9 @@ APP=[
   "$('card').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-say],[data-tb]');if(!t)return;\n if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.g)",1),
  ("$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo]');if(!t)return;\n if(t.dataset.memo)",
   "$('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-m],[data-memo],[data-tb]');if(!t)return;\n if(t.dataset.tb)return openTable(t.dataset.tb);if(t.dataset.memo)",1),
+ # озвучка: голос выбирается явно по языку (iOS иначе берёт системный голос — русский)
+ ("function say(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();t=String(t||'').replace(/[()]/g,'');const u=new SpeechSynthesisUtterance(t);u.lang=LANG.tts;u.rate=rate();speechSynthesis.speak(u);}",
+  "function ttsVoice(){const vs=speechSynthesis.getVoices()||[],L=LANG.tts.toLowerCase().replace('_','-'),p=L.split('-')[0];const m=vs.filter(v=>String(v.lang||'').toLowerCase().replace('_','-').split('-')[0]===p);return m.find(v=>v.lang.toLowerCase().replace('_','-')===L&&v.localService)||m.find(v=>v.lang.toLowerCase().replace('_','-')===L)||m[0]||null;}\ntry{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());}}catch(e){}\nfunction say(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();t=String(t||'').replace(/[()]/g,'');const v=ttsVoice();if(!v&&(speechSynthesis.getVoices()||[]).length){if(!say.w){say.w=1;alert('На устройстве нет греческого голоса. Установи: Настройки → Универсальный доступ → Устный контент → Голоса → Греческий.');}return;}const u=new SpeechSynthesisUtterance(t);if(v)u.voice=v;u.lang=v?v.lang:LANG.tts;u.rate=rate();speechSynthesis.speak(u);}",1),
 ]
 SHELL=[
  ("<title>Корейский — справочник</title>","<title>Греческий — справочник</title>",1),

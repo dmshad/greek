@@ -135,7 +135,9 @@ $('list').onclick=e=>{if(S.app==='dict'&&e.target.closest('[data-wtr]'))return s
  if(eb){const id=eb.dataset.e;S.open.has(id)?S.open.delete(id):S.open.add(id);render();return;}
  const r=e.target.closest('.row');if(r)openCard(r.dataset.id);};
 // голос не задаём: по u.lang система берёт голос, выбранный в настройках устройства
-function say(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();t=String(t||'').replace(/[()]/g,'');const u=new SpeechSynthesisUtterance(t);u.lang=LANG.tts;u.rate=rate();speechSynthesis.speak(u);}
+function ttsVoice(){const vs=speechSynthesis.getVoices()||[],L=LANG.tts.toLowerCase().replace('_','-'),p=L.split('-')[0];const m=vs.filter(v=>String(v.lang||'').toLowerCase().replace('_','-').split('-')[0]===p);return m.find(v=>v.lang.toLowerCase().replace('_','-')===L&&v.localService)||m.find(v=>v.lang.toLowerCase().replace('_','-')===L)||m[0]||null;}
+try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.addEventListener('voiceschanged',()=>speechSynthesis.getVoices());}}catch(e){}
+function say(t){if(!window.speechSynthesis)return;speechSynthesis.cancel();t=String(t||'').replace(/[()]/g,'');const v=ttsVoice();if(!v&&(speechSynthesis.getVoices()||[]).length){if(!say.w){say.w=1;alert('На устройстве нет греческого голоса. Установи: Настройки → Универсальный доступ → Устный контент → Голоса → Греческий.');}return;}const u=new SpeechSynthesisUtterance(t);if(v)u.voice=v;u.lang=v?v.lang:LANG.tts;u.rate=rate();speechSynthesis.speak(u);}
 function sec(t,b){return b?`<div class="sec"><b>${t}</b>${b}</div>`:'';}
 function openCard(id){const w=BY[id];if(!w)return;
  const notes=(w.notes||[]).map(n=>D.notes[n]).filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join('');
