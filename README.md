@@ -13,3 +13,14 @@ https://dmshad.github.io/greek/ — PWA, только автономный ре�
 Выкладка: `tools/deploy.sh "<сообщение>" <версия>` (пуш через origin; токен в репозиторий не кладётся).
 Хранилище и кэш — с префиксом el: / el- (на одном адресе с корейским, не пересекаются).
 Решения по курсу и транскрипции — docs/.
+
+## Полный бэкап и восстановление с нуля
+Репозиторий — единственный источник правды (артефакта в Claude у греческого нет). Сборка из исходников побайтно совпадает
+с выложенным приложением (проверено 07.11.2026 на версии 2026-10-28.1: index.html, sw.js, manifest, иконки, version.json, print.html).
+Прогресс учеников (localStorage на их устройствах) в репозиторий не входит и не нужен — тему для старта выбирают в приложении.
+
+Нужно: Python 3, Pillow (иконки), шрифт DejaVu Sans Bold (`/usr/share/fonts/truetype/dejavu/`); для синхронизации ядра — клон dmshad/korean.
+1. `git clone https://github.com/dmshad/greek.git && cd greek`
+2. `tools/deploy.sh "<сообщение>" <ГГГГ-ММ-ДД.N>` — словарь → data.json → приложение → пакет → печатные таблицы → коммит и пуш.
+   Только собрать, без выкладки: `python3 tools/vocab_build.py && python3 tools/data_build.py && python3 tools/build.py el app.html`.
+3. GitHub Pages: Settings → Pages → ветка main, корень.
