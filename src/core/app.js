@@ -108,7 +108,7 @@ function row(w){const o=S.open.has(w.id),hk=S.mode==='noko'&&!o,hr=S.mode==='nor
  (showTr?`<span class="tr">[${esc(w.tr)}]</span>`:(S.tr&&S.mode==='noko'?` <span class="tr">${hid}</span>`:''))+
  `<div class="ru">${hr?hid:esc(w.ru)}</div></div><button class="wkb${WK(w)?' on':''}" data-wk="${esc(w.id)}" aria-label="Плохо помню">${WK(w)?'●':'○'}</button>${eye}</div>`;}
 function togWeak(id){const w=BY[id];if(!w)return;ST.weak[id]=WK(w)?{on:0,c:0}:{on:1,c:0,m:1};saveST();}
-function render(){document.body.classList.toggle('rv',S.app==='rev');$('dseg').hidden=S.app!=='rev';if(S.app==='rev')dsegUpd();if(S.app==='dlg')return renderD();if(S.app==='prog')return renderP();if(S.app==='gram')return renderG();if(S.app==='train'||S.app==='rev'||S.app==='wk')return renderT();
+function render(){document.body.classList.toggle('rv',S.app==='rev');$('dseg').hidden=S.app!=='rev';if(S.app==='rev')dsegUpd();if(S.app==='dlg')return renderD();if(S.app==='prog')return renderP();if(S.app==='stat')return renderS();if(S.app==='gram')return renderG();if(S.app==='train'||S.app==='rev'||S.app==='wk')return renderT();
  $('trb').disabled=S.mode==='noko';$('trb').classList.toggle('on',S.tr&&S.mode!=='noko');
  const nw=W.filter(w=>WK(w)).length;$('wk').classList.toggle('on',S.weak);$('wk').innerHTML='<span style="color:var(--acc)">●</span>'+(nw?' '+nw:'');
  const L=W.filter(match);
@@ -248,6 +248,7 @@ function bstRoll(){if(!ST.bst||typeof ST.bst!=='object')ST.bst={};const B=ST.bst
  if(B.w<w){const n=Object.values(B.d).reduce((a,b)=>a+(+b||0),0);for(let x=B.w,i=0;x<w&&i<600;i++){if(!B.h.some(y=>y.w===x))B.h.push({w:x,n:x===B.w?n:0});const d=ymdD(x);d.setDate(d.getDate()+7);x=ymd(d);}B.w=w;B.d={};ch=1;}
  for(const k of Object.keys(B.d))if(monOf(ymdD(k))!==B.w){delete B.d[k];ch=1;}
  return ch;}
+function renderS(){$('tcnt')&&($('tcnt').textContent='');$('list').innerHTML=`<div id="pg"><div class="gtitle">Статистика</div>${bstHTML()}</div>`;}
 function bstAdd(){try{bstRoll();const k=ymd(Date.now());ST.bst.d[k]=(ST.bst.d[k]||0)+1;}catch(e){}}
 const MONN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
  MONG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
@@ -258,9 +259,9 @@ const blkW=n=>{const a=n%10,b=n%100;return a===1&&b!==11?'блок':a>=2&&a<=4&&
 function bstHTML(){if(bstRoll())saveST();const B=ST.bst,m=ymdD(B.w),today=ymd(Date.now());let sum=0;
  const cells=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((n,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);const k=ymd(d),v=B.d[k]||0;sum+=v;
   return `<div class="bsd${k===today?' on':''}${k>today?' fut':''}"><span>${n}</span><b>${k>today?'':v}</b></div>`;}).join('');
- let h=`<h3>Статистика</h3><p>Эта неделя — ${wkName(B.w)} <span class="mut">(${wkRange(B.w)})</span>: <b>${sum}</b> ${blkW(sum)}</p><div class="bsw">${cells}</div>`;
+ let h=`<h3>Эта неделя</h3><p>${wkName(B.w)} <span class="mut">(${wkRange(B.w)})</span>: <b>${sum}</b> ${blkW(sum)}</p><div class="bsw">${cells}</div><h3>Прошлые недели</h3>`;
  h+=B.h.length?`<div class="bsh">`+B.h.slice().reverse().map(x=>`<div class="bsr"><span>${wkName(x.w)} <span class="mut">${wkRange(x.w)}</span></span><b>${x.n}</b></div>`).join('')+`</div>`
-  :`<p class="mut">Прошлых недель пока нет — сумма недели попадёт сюда после воскресенья.</p>`;
+  :`<p class="mut">Пока нет — сумма недели попадёт сюда после воскресенья.</p>`;
  return h+`<p class="mut">Считаются законченные блоки любых разделов (слова, грамматика, числа, формы, на слух) и диалоги целиком.</p>`;}
 /* Чистка состояния (03.10): храним позицию, «плохо помню», «Спорные», счётчики и незаконченное.
    Уроки прошлых тем (lesArc) — только текущая позиция и повтор; в уроке — тексты завершённых блоков удаляются, остаются вердикты. */
@@ -1260,8 +1261,8 @@ const DVN={ok:['верно','ok'],typo:['описка','ok'],bad:['ошибка'
 
 /* ===== Переключатель режима ===== */
 function setApp(a){if(S.app==='dlg'&&a!=='dlg')auStop();S.app=a;S.q='';$('q').value='';try{LSX.setItem('app',a);}catch(e){}
- $('dictbars').hidden=a!=='dict';$('grambars').hidden=a!=='gram';const T=a==='train'||a==='rev'||a==='wk',DL=a==='dlg';$('trainbars').hidden=!T;$('rtabbar').hidden=!T||a==='wk';$('dlgbars').hidden=!DL;const PG=a==='prog';$('q').hidden=T||DL||PG;$('tsp').hidden=!(T||DL||PG);
- $('mb').textContent=({dict:'Словарь',gram:'Грамматика',train:'Тема',rev:'Повторение',dlg:'Диалог',prog:'Прогресс',wk:'Плохо помню'})[a]+' ▾';
+ $('dictbars').hidden=a!=='dict';$('grambars').hidden=a!=='gram';const T=a==='train'||a==='rev'||a==='wk',DL=a==='dlg';$('trainbars').hidden=!T;$('rtabbar').hidden=!T||a==='wk';$('dlgbars').hidden=!DL;const PG=a==='prog'||a==='stat';$('q').hidden=T||DL||PG;$('tsp').hidden=!(T||DL||PG);
+ $('mb').textContent=({dict:'Словарь',gram:'Грамматика',train:'Тема',rev:'Повторение',dlg:'Диалог',prog:'Прогресс',stat:'Статистика',wk:'Плохо помню'})[a]+' ▾';
  $('mm').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===a));
  $('q').placeholder=a==='gram'?'είμαι, артикль, ударение…':'Поиск: μητέρα, мать, митэра';
  render();scrollTo(0,0);}
@@ -1310,7 +1311,6 @@ function expData(){return {app:LANG.code+'-trainer',fmt:1,owner:owner(),ts:Date.
 function renderP(){$('tcnt')&&($('tcnt').textContent='');const nw=W.filter(w=>WK(w)).length,dp=ST.disp||[],le=lastExp();
  let h=`<div id="pg"><div class="gtitle">Прогресс</div>`;
  if(COURSE.on)h+=courseHTML();
- h+=bstHTML();
  h+=`<h3>Доучить</h3><p>${nw?`Слов «плохо помню»: <b>${nw}</b>. Ошибка ставит слово в список, два верных ответа подряд — снимают.`:'Список пуст.'}</p>`;
  if(nw)h+=`<div class="pb"><button data-p="weak" class="pri">Открыть список</button><button data-p="wtr">Тренировать</button></div>`;
  h+=`<h3>Спорные ответы</h3><p class="mut">Ответы, которые проверка не распознала, с твоим решением. Их передают Claude, чтобы пополнить банк вариантами и ловушками.</p>`;
