@@ -238,6 +238,30 @@ $('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-
 let ST={v:1,weak:{},stats:{},sess:null,last:[]};
 function WK(w){const x=ST.weak[w.id];return x?!!x.on:!!w.weak;}
 let REF=null,SAVEQ=Promise.resolve(),TREADY=false,TLOCAL=false;
+/* Статистика блоков (13.11): ST.bst={w: понедельник текущей недели 'ГГГГ-ММ-ДД', d:{дата: блоков}, h:[{w, n}] — прошлые недели, только суммы}.
+   Блок — законченный блок любого раздела (слова, грамматика, числа, формы, на слух) или диалог целиком. Неделя — пн–вс по часам устройства. */
+const ymd=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const ymdD=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,12);};
+function monOf(t){const d=new Date(t);d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return ymd(d);}
+function bstRoll(){if(!ST.bst||typeof ST.bst!=='object')ST.bst={};const B=ST.bst,w=monOf(Date.now());B.d=B.d||{};B.h=B.h||[];let ch=0;
+ if(!B.w)B.w=w;
+ if(B.w<w){const n=Object.values(B.d).reduce((a,b)=>a+(+b||0),0);if(n&&!B.h.some(x=>x.w===B.w))B.h.push({w:B.w,n});B.w=w;B.d={};ch=1;}
+ for(const k of Object.keys(B.d))if(monOf(ymdD(k))!==B.w){delete B.d[k];ch=1;}
+ return ch;}
+function bstAdd(){try{bstRoll();const k=ymd(Date.now());ST.bst.d[k]=(ST.bst.d[k]||0)+1;}catch(e){}}
+const MONN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
+ MONG=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function wkName(w){const d=ymdD(w);return MONN[d.getMonth()]+' '+Math.ceil(d.getDate()/7)+(d.getFullYear()!==new Date().getFullYear()?' · '+d.getFullYear():'');}
+function wkRange(w){const a=ymdD(w),b=new Date(a);b.setDate(a.getDate()+6);
+ return a.getMonth()===b.getMonth()?`${a.getDate()}–${b.getDate()} ${MONG[b.getMonth()]}`:`${a.getDate()} ${MONG[a.getMonth()]} – ${b.getDate()} ${MONG[b.getMonth()]}`;}
+const blkW=n=>{const a=n%10,b=n%100;return a===1&&b!==11?'блок':a>=2&&a<=4&&(b<12||b>14)?'блока':'блоков';};
+function bstHTML(){if(bstRoll())saveST();const B=ST.bst,m=ymdD(B.w),today=ymd(Date.now());let sum=0;
+ const cells=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((n,i)=>{const d=new Date(m);d.setDate(m.getDate()+i);const k=ymd(d),v=B.d[k]||0;sum+=v;
+  return `<div class="bsd${k===today?' on':''}${k>today?' fut':''}"><span>${n}</span><b>${k>today?'':v}</b></div>`;}).join('');
+ let h=`<h3>Статистика</h3><p>Эта неделя — ${wkName(B.w)} <span class="mut">(${wkRange(B.w)})</span>: <b>${sum}</b> ${blkW(sum)}</p><div class="bsw">${cells}</div>`;
+ h+=B.h.length?`<div class="bsh">`+B.h.slice().reverse().map(x=>`<div class="bsr"><span>${wkName(x.w)} <span class="mut">${wkRange(x.w)}</span></span><b>${x.n}</b></div>`).join('')+`</div>`
+  :`<p class="mut">Прошлых недель пока нет — сумма недели попадёт сюда после воскресенья.</p>`;
+ return h+`<p class="mut">Считаются законченные блоки любых разделов (слова, грамматика, числа, формы, на слух) и диалоги целиком.</p>`;}
 /* Чистка состояния (03.10): храним позицию, «плохо помню», «Спорные», счётчики и незаконченное.
    Уроки прошлых тем (lesArc) — только текущая позиция и повтор; в уроке — тексты завершённых блоков удаляются, остаются вердикты. */
 function pruneST(){try{delete ST.grstat;
@@ -339,7 +363,7 @@ function recWk(id,r){const s=ST.stats[id]||(ST.stats[id]=[0,0,0]);s[r==='ok'?0:r
 function adv(s,r){const it=s.q[s.pos];if(!it.rep){s.res[it.id]=r;s.stage==='wk'?recWk(it.id,r):record(it.id,r);}
  s.pos++;
  if(s.pos>=s.q.length&&!s.rep){s.rep=1;s.q.push(...s.q.filter(x=>!x.rep&&s.res[x.id]==='bad').map(x=>({id:x.id,rep:1})));}
- if(s.pos>=s.q.length){s.ph='sum';s.tail=s.q.slice(-2).map(x=>x.id);const st=STG[s.stage];
+ if(s.pos>=s.q.length){s.ph='sum';bstAdd();s.tail=s.q.slice(-2).map(x=>x.id);const st=STG[s.stage];
   if(st.kind!=='sec'&&s.bi===s.blocks.length-1&&!s.cov){const ids=[...new Set(s.blocks.flat())];s.cov=ids.length;if(st.kind!=='wk')ST.last=ids;}}
  else s.cur={st:'ask',r:null,v:''};
  saveST();}
@@ -641,7 +665,7 @@ function offChk(s,i){exSave();const a=s.ans[i]||[];
   const r=CHK.check(x,u);
   if(r.v==='unk')return {v:'unk',fix:r.best||'',note:r.note||'',e:'',dsp:r.typo?0:1,typo:r.typo?1:0};
   return {v:r.v,fix:r.v==='bad'?(r.best||''):'',note:r.note||'',e:r.v==='bad'?r.kind:''};});
- s.res[i].forEach((r,k)=>{if(r.v!=='unk')grStat(s.bl[i][k].t,r.v!=='bad',1);});saveST();exUpd();}
+ s.res[i].forEach((r,k)=>{if(r.v!=='unk')grStat(s.bl[i][k].t,r.v!=='bad',1);});bstAdd();saveST();exUpd();}
 function exSelf(k,v){const s=EXA();if(!s||!s.res[s.bi])return;const r=s.res[s.bi][k],x=s.bl[s.bi][k];if(!r||r.v!=='unk')return;
  r.v=v;r.man=1;if(v==='bad'){r.note='Отмечено вручную.';r.e='self';}
  grStat(x.t,v!=='bad',1);
@@ -664,7 +688,7 @@ async function chkBlock(){const s=EXA();if(!s)return;const i=s.bi,sid=s.id,key=s
   if(exById(sid)!==s)return;if(!Array.isArray(r)||r.length<s.bl[i].length)throw {code:'invalid_json'};
   s.res[i]=s.bl[i].map((x,k)=>{const o=r[k]||{},u=((s.ans[i]||[])[k]||'').trim(),emp=!u||u==='-';const v0=emp?'bad':(['ok','typo','bad'].includes(o.v)?o.v:'bad'),v=v0==='typo'?'unk':v0;
    return {v,fix:String(o.fix||''),note:v==='bad'?String(o.note||''):v0==='typo'?'Похоже на опечатку. Если это опечатка — «Засчитать»; если не помнил — «Моя ошибка».':'',e:emp?'empty':String(o.e||''),typo:v0==='typo'?1:0};});
-  s.res[i].forEach((r,k)=>grStat(s.bl[i][k].t,r.v!=='bad',1));saveST();
+  s.res[i].forEach((r,k)=>grStat(s.bl[i][k].t,r.v!=='bad',1));bstAdd();saveST();
  }catch(e){if(exById(sid)===s)GR.err[key]=emsg(e);}
  finally{delete GR.ck[key];if(EXA()===s)exUpd();}}
 async function exWhy(k){const s=EXA();if(!s)return;const i=s.bi,r=s.res[i]&&s.res[i][k],key=s.id+'|'+i+'|'+k;if(!r||r.why||GR.why[key])return;
@@ -946,7 +970,7 @@ function xLoad(s){let it;const k=s.k;
 function xRec(it,r){if(it.rep)return;const T=it.st==='au'?ST.au.st:ST[it.st];const x=T[it.sk]||(T[it.sk]=[0,0]);x[r==='ok'?0:1]++;}
 function xAdv(s){const it=s.q[s.pos];if(!it.rep){s.res[it.i]=s.cur.r;xRec(it,s.cur.r);}s.pos++;
  if(s.pos>=s.q.length&&!s.rep){s.rep=1;s.q.push(...s.q.filter(x=>!x.rep&&s.res[x.i]==='bad').map(x=>Object.assign({},x,{rep:1})));}
- if(s.pos>=s.q.length)s.ph='sum';else s.cur={st:'ask',v:''};saveST();}
+ if(s.pos>=s.q.length){s.ph='sum';bstAdd();}else s.cur={st:'ask',v:''};saveST();}
 const dn=s=>String(s||'').normalize('NFC').replace(/[.,!?~'’"“”…·:;()]/g,'').replace(/\s+/g,' ').trim();
 function xCheck(){const s=xSess(),it=s&&s.q&&s.q[s.pos],c=s&&s.cur,ta=$('xa');if(!it||c.st!=='ask')return;const v=ta.value;
  if(it.m==='dig'){const d=v.replace(/\D/g,'');if(!d)return;c.v=v;c.ok=d===it.a[0]?1:0;}
@@ -1033,7 +1057,7 @@ function auChk(s,i){const a=s.ans[i]||[];
  s.res[i]=s.bl[i].map((x,k)=>{const u=(a[k]||'').trim(),refs=[x.ko,...(x.alt||[])].flatMap(r=>/[()\[\]|]/.test(r)?CHK.expand(r):[r]);
   let v='bad';if(u&&u!=='-'){if(refs.some(r=>dn(r)===dn(u)))v='ok';else if(refs.some(r=>kn(r)===kn(u)))v='typo';}
   return {v,fix:'',note:v==='typo'?'Только пробелы.':'',e:''};});
- s.res[i].forEach((r,k)=>grStat(s.bl[i][k].t,r.v!=='bad',1));saveST();exUpd();}
+ s.res[i].forEach((r,k)=>grStat(s.bl[i][k].t,r.v!=='bad',1));bstAdd();saveST();exUpd();}
 function auBlockHTML(s,it,rs,a,title,foot,gc,ce){let h='';
  if(!rs){h=`<div class="tmeta">${title} · запиши услышанное</div>`+it.map((x,k)=>
    `<div class="gi"><div class="gq"><span class="gk">${k+1}</span><button class="chip" data-say="${esc(x.ko)}" style="font-size:18px;padding:8px 14px">🔊 Слушать</button></div>
@@ -1170,7 +1194,7 @@ async function trCheck(txt){const m=dm(),TRG=TRGM[m],T=TRS(m),c=T.cur;txt=(txt||
   if(!TRS(m).cur||TRS(m).cur.id!==id)return;const v=['ok','typo','bad'].includes(r&&r.v)?r.v:'bad';
   c.res[k]={t:txt,v,fix:v==='ok'?'':String(r.fix||'').trim(),note:v==='bad'?String(r.note||'').trim():'',tip:v!=='bad'?String(r.tip||'').trim():''};TRG.busy=0;trAdv(m);
  }catch(e){TRG.cerr=emsg(e);}finally{TRG.busy=0;trUpd(true,m);}}
-function trAdv(m){const TRG=TRGM[m],c=TRS(m).cur;c.i++;TRG.draft='';if(DS().tab===m&&$('din'))$('din').value='';saveST();trUpd(true,m);trAuto(m);}
+function trAdv(m){const TRG=TRGM[m],c=TRS(m).cur;c.i++;if(c.i>=c.lines.length)bstAdd();TRG.draft='';if(DS().tab===m&&$('din'))$('din').value='';saveST();trUpd(true,m);trAuto(m);}
 function trFlip(k){const c=TRS().cur,r=c&&c.res[k];if(!r||r.v==='skip'||r.v==='self')return;r.v=r.v==='bad'?'ok':'bad';
  if(r.unk&&c.bid){const L=c.lines[k];(ST.disp=ST.disp||[]).push({ts:Date.now(),t:'dlg',u:c.bid+':'+k,bid:c.bid,ru:L.ru,ko:L.tpl||L.ko,a:r.t,v:r.v});r.unk=0;}
  saveST();trUpd();}
@@ -1286,6 +1310,7 @@ function expData(){return {app:LANG.code+'-trainer',fmt:1,owner:owner(),ts:Date.
 function renderP(){$('tcnt')&&($('tcnt').textContent='');const nw=W.filter(w=>WK(w)).length,dp=ST.disp||[],le=lastExp();
  let h=`<div id="pg"><div class="gtitle">Прогресс</div>`;
  if(COURSE.on)h+=courseHTML();
+ h+=bstHTML();
  h+=`<h3>Доучить</h3><p>${nw?`Слов «плохо помню»: <b>${nw}</b>. Ошибка ставит слово в список, два верных ответа подряд — снимают.`:'Список пуст.'}</p>`;
  if(nw)h+=`<div class="pb"><button data-p="weak" class="pri">Открыть список</button><button data-p="wtr">Тренировать</button></div>`;
  h+=`<h3>Спорные ответы</h3><p class="mut">Ответы, которые проверка не распознала, с твоим решением. Их передают Claude, чтобы пополнить банк вариантами и ловушками.</p>`;
