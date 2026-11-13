@@ -238,14 +238,14 @@ $('list').addEventListener('click',e=>{const t=e.target.closest('[data-g],[data-
 let ST={v:1,weak:{},stats:{},sess:null,last:[]};
 function WK(w){const x=ST.weak[w.id];return x?!!x.on:!!w.weak;}
 let REF=null,SAVEQ=Promise.resolve(),TREADY=false,TLOCAL=false;
-/* Статистика блоков (13.11): ST.bst={w: понедельник текущей недели 'ГГГГ-ММ-ДД', d:{дата: блоков}, h:[{w, n}] — прошлые недели, только суммы}.
+/* Статистика блоков (13.11): ST.bst={w: понедельник текущей недели 'ГГГГ-ММ-ДД', d:{дата: блоков}, h:[{w, n}] — прошлые недели, только суммы, пустые — с нулём}.
    Блок — законченный блок любого раздела (слова, грамматика, числа, формы, на слух) или диалог целиком. Неделя — пн–вс по часам устройства. */
 const ymd=t=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const ymdD=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,12);};
 function monOf(t){const d=new Date(t);d.setHours(12,0,0,0);d.setDate(d.getDate()-(d.getDay()+6)%7);return ymd(d);}
 function bstRoll(){if(!ST.bst||typeof ST.bst!=='object')ST.bst={};const B=ST.bst,w=monOf(Date.now());B.d=B.d||{};B.h=B.h||[];let ch=0;
  if(!B.w)B.w=w;
- if(B.w<w){const n=Object.values(B.d).reduce((a,b)=>a+(+b||0),0);if(n&&!B.h.some(x=>x.w===B.w))B.h.push({w:B.w,n});B.w=w;B.d={};ch=1;}
+ if(B.w<w){const n=Object.values(B.d).reduce((a,b)=>a+(+b||0),0);for(let x=B.w,i=0;x<w&&i<600;i++){if(!B.h.some(y=>y.w===x))B.h.push({w:x,n:x===B.w?n:0});const d=ymdD(x);d.setDate(d.getDate()+7);x=ymd(d);}B.w=w;B.d={};ch=1;}
  for(const k of Object.keys(B.d))if(monOf(ymdD(k))!==B.w){delete B.d[k];ch=1;}
  return ch;}
 function bstAdd(){try{bstRoll();const k=ymd(Date.now());ST.bst.d[k]=(ST.bst.d[k]||0)+1;}catch(e){}}
